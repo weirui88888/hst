@@ -7,7 +7,9 @@ import { vGsap } from './directives/gsapScroll';
 
 const app = createApp(App);
 app.use(createPinia());
+
 app.directive('intersect', vIntersect);
+
 app.directive('gsap', vGsap);
 
 // 初始化主题（从localStorage读取）
@@ -19,5 +21,3 @@ if (savedTheme === 'dark' || !savedTheme) {
 }
 
 app.mount('#app');
-
-

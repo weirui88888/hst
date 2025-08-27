@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# 校验提交信息是否符合约定式规范
+npx --yes commitlint --edit "$1"
+
+

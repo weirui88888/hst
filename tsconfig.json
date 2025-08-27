@@ -16,4 +16,3 @@
   "include": ["src", "uno.config.ts", "vite.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
-

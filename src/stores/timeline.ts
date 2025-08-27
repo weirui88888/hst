@@ -22,10 +22,10 @@ function generateId() {
 export const useTimelineStore = defineStore('timeline', {
   state: () => ({
     items: ((): TimelineItem[] => {
-          const baseDate = new Date();
-    const demo: TimelineItem[] = [];
-    const aspectRatios = ['16/9', '4/3', '1/1', '3/2', '2/1', '5/4', '3/4', '2/3'];
-    const titles = [
+      const baseDate = new Date();
+      const demo: TimelineItem[] = [];
+      const aspectRatios = ['16/9', '4/3', '1/1', '3/2', '2/1', '5/4', '3/4', '2/3'];
+      const titles = [
         '清晨的咖啡香',
         '和猫在阳台晒太阳',
         '把老相册翻了出来',
@@ -73,7 +73,7 @@ export const useTimelineStore = defineStore('timeline', {
         '九月收获季节',
         '十二月年终总结',
       ];
-      
+
       // 创建不同长度的内容
       const contents = [
         '用一句话记录一段心情与光影。',
@@ -100,21 +100,117 @@ export const useTimelineStore = defineStore('timeline', {
 
       // 创建包含指定月份的故事
       const specificMonths = [
-        { month: 1, day: 15, title: '新年第一缕阳光', content: '一月的阳光透过窗帘洒在脸上，新的一年就这样开始了。窗外的世界还沉浸在冬日的宁静中，但心中已经充满了对未来的期待。每一个新的开始都值得被珍惜，就像这第一缕阳光一样温暖而珍贵。', tags: ['新年', '希望'] },
-        { month: 1, day: 28, title: '一月里的温暖时光', content: '寒冷的冬天里，一杯热茶就能温暖整个下午。', tags: ['温暖', '冬日'] },
-        { month: 1, day: 3, title: '一月新开始', content: '新的一年，新的开始，新的希望。', tags: ['新年', '开始'] },
-        { month: 5, day: 12, title: '五月花开的季节', content: '五月的花都开了，空气中弥漫着淡淡的花香。樱花、桃花、梨花，各种花朵竞相绽放，将整个城市装扮得如诗如画。走在街上，仿佛置身于花的海洋中，心情也变得格外愉悦。春天总是能给人带来无限的美好和希望。', tags: ['春天', '花开'] },
-        { month: 5, day: 20, title: '五月青春飞扬', content: '五月的风很温柔，就像青春一样美好。', tags: ['青春', '五月'] },
-        { month: 5, day: 8, title: '春日野餐时光', content: '在五月的阳光下，和朋友一起野餐是最美好的时光。我们带着简单的食物，找了一片绿草地，铺上野餐垫，就这样度过了一个悠闲的下午。阳光透过树叶洒在身上，微风轻抚着脸颊，一切都那么美好。', tags: ['野餐', '朋友'] },
-        { month: 7, day: 15, title: '七月盛夏的记忆', content: '七月的夏天很热，但回忆却很甜。', tags: ['夏天', '回忆'] },
-        { month: 7, day: 22, title: '七月热情似火', content: '七月的热情就像太阳一样炙热。这个季节总是充满了活力和激情，人们穿着轻薄的衣物，在阳光下尽情享受生活。虽然天气炎热，但内心的热情比太阳更加炽热。', tags: ['热情', '夏天'] },
-        { month: 7, day: 5, title: '夏日海边漫步', content: '七月的海边，海风轻抚，海浪轻拍。', tags: ['海边', '夏日'] },
-        { month: 9, day: 10, title: '九月秋高气爽', content: '九月的天空很蓝，空气很清新。', tags: ['秋天', '清爽'] },
-        { month: 9, day: 18, title: '九月收获季节', content: '九月的田野里，金黄的稻穗在风中摇曳。这是一个收获的季节，农民们忙碌着收割庄稼，空气中弥漫着稻谷的清香。看着金灿灿的稻田，心中充满了丰收的喜悦和对大自然的感恩。', tags: ['收获', '秋天'] },
-        { month: 9, day: 25, title: '秋日登山远眺', content: '九月的山很美丽，登高望远，心旷神怡。', tags: ['登山', '秋天'] },
-        { month: 12, day: 15, title: '十二月岁末回望', content: '十二月的夜晚，回顾这一年的点点滴滴。', tags: ['回顾', '年终'] },
-        { month: 12, day: 24, title: '十二月年终总结', content: '一年的时光就这样过去了，感谢所有的遇见。', tags: ['年终', '感恩'] },
-        { month: 12, day: 31, title: '冬日围炉夜话', content: '十二月的最后一天，和家人围炉而坐，温暖如春。窗外寒风呼啸，但屋内却充满了温暖和爱意。我们分享着这一年的故事，回忆着美好的时光，期待着新的一年的到来。这种温馨的时刻总是让人感到幸福和满足。', tags: ['家庭', '温暖'] },
+        {
+          month: 1,
+          day: 15,
+          title: '新年第一缕阳光',
+          content:
+            '一月的阳光透过窗帘洒在脸上，新的一年就这样开始了。窗外的世界还沉浸在冬日的宁静中，但心中已经充满了对未来的期待。每一个新的开始都值得被珍惜，就像这第一缕阳光一样温暖而珍贵。',
+          tags: ['新年', '希望'],
+        },
+        {
+          month: 1,
+          day: 28,
+          title: '一月里的温暖时光',
+          content: '寒冷的冬天里，一杯热茶就能温暖整个下午。',
+          tags: ['温暖', '冬日'],
+        },
+        {
+          month: 1,
+          day: 3,
+          title: '一月新开始',
+          content: '新的一年，新的开始，新的希望。',
+          tags: ['新年', '开始'],
+        },
+        {
+          month: 5,
+          day: 12,
+          title: '五月花开的季节',
+          content:
+            '五月的花都开了，空气中弥漫着淡淡的花香。樱花、桃花、梨花，各种花朵竞相绽放，将整个城市装扮得如诗如画。走在街上，仿佛置身于花的海洋中，心情也变得格外愉悦。春天总是能给人带来无限的美好和希望。',
+          tags: ['春天', '花开'],
+        },
+        {
+          month: 5,
+          day: 20,
+          title: '五月青春飞扬',
+          content: '五月的风很温柔，就像青春一样美好。',
+          tags: ['青春', '五月'],
+        },
+        {
+          month: 5,
+          day: 8,
+          title: '春日野餐时光',
+          content:
+            '在五月的阳光下，和朋友一起野餐是最美好的时光。我们带着简单的食物，找了一片绿草地，铺上野餐垫，就这样度过了一个悠闲的下午。阳光透过树叶洒在身上，微风轻抚着脸颊，一切都那么美好。',
+          tags: ['野餐', '朋友'],
+        },
+        {
+          month: 7,
+          day: 15,
+          title: '七月盛夏的记忆',
+          content: '七月的夏天很热，但回忆却很甜。',
+          tags: ['夏天', '回忆'],
+        },
+        {
+          month: 7,
+          day: 22,
+          title: '七月热情似火',
+          content:
+            '七月的热情就像太阳一样炙热。这个季节总是充满了活力和激情，人们穿着轻薄的衣物，在阳光下尽情享受生活。虽然天气炎热，但内心的热情比太阳更加炽热。',
+          tags: ['热情', '夏天'],
+        },
+        {
+          month: 7,
+          day: 5,
+          title: '夏日海边漫步',
+          content: '七月的海边，海风轻抚，海浪轻拍。',
+          tags: ['海边', '夏日'],
+        },
+        {
+          month: 9,
+          day: 10,
+          title: '九月秋高气爽',
+          content: '九月的天空很蓝，空气很清新。',
+          tags: ['秋天', '清爽'],
+        },
+        {
+          month: 9,
+          day: 18,
+          title: '九月收获季节',
+          content:
+            '九月的田野里，金黄的稻穗在风中摇曳。这是一个收获的季节，农民们忙碌着收割庄稼，空气中弥漫着稻谷的清香。看着金灿灿的稻田，心中充满了丰收的喜悦和对大自然的感恩。',
+          tags: ['收获', '秋天'],
+        },
+        {
+          month: 9,
+          day: 25,
+          title: '秋日登山远眺',
+          content: '九月的山很美丽，登高望远，心旷神怡。',
+          tags: ['登山', '秋天'],
+        },
+        {
+          month: 12,
+          day: 15,
+          title: '十二月岁末回望',
+          content: '十二月的夜晚，回顾这一年的点点滴滴。',
+          tags: ['回顾', '年终'],
+        },
+        {
+          month: 12,
+          day: 24,
+          title: '十二月年终总结',
+          content: '一年的时光就这样过去了，感谢所有的遇见。',
+          tags: ['年终', '感恩'],
+        },
+        {
+          month: 12,
+          day: 31,
+          title: '冬日围炉夜话',
+          content:
+            '十二月的最后一天，和家人围炉而坐，温暖如春。窗外寒风呼啸，但屋内却充满了温暖和爱意。我们分享着这一年的故事，回忆着美好的时光，期待着新的一年的到来。这种温馨的时刻总是让人感到幸福和满足。',
+          tags: ['家庭', '温暖'],
+        },
       ];
 
       // 添加指定月份的故事
@@ -124,7 +220,7 @@ export const useTimelineStore = defineStore('timeline', {
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         const randomRatio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
-        
+
         demo.push({
           id: generateId(),
           title: item.title,
@@ -178,5 +274,3 @@ export const useTimelineStore = defineStore('timeline', {
     },
   },
 });
-
-

@@ -14,39 +14,44 @@
       title="返回顶部"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5 10l7-7m0 0l7 7m-7-7v18"
+        />
       </svg>
     </button>
   </Transition>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+  import { ref, onMounted, onUnmounted } from 'vue';
 
-const showBackToTop = ref(false);
+  const showBackToTop = ref(false);
 
-const checkScrollPosition = () => {
-  showBackToTop.value = window.scrollY > 1000;
-};
+  const checkScrollPosition = () => {
+    showBackToTop.value = window.scrollY > 1000;
+  };
 
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  onMounted(() => {
+    window.addEventListener('scroll', checkScrollPosition, { passive: true });
+    // 初始化检查
+    checkScrollPosition();
   });
-};
 
-onMounted(() => {
-  window.addEventListener('scroll', checkScrollPosition, { passive: true });
-  // 初始化检查
-  checkScrollPosition();
-});
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', checkScrollPosition);
-});
+  onUnmounted(() => {
+    window.removeEventListener('scroll', checkScrollPosition);
+  });
 </script>
 
 <style scoped>
-/* 可以添加额外的自定义样式 */
+  /* 可以添加额外的自定义样式 */
 </style>

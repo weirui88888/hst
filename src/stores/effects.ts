@@ -32,5 +32,3 @@ export const useEffectsStore = defineStore('effects', {
     },
   },
 });
-
-

@@ -6,7 +6,7 @@ export const useThemeStore = defineStore('theme', {
   state: () => {
     const savedTheme = localStorage.getItem('theme') as ThemeMode | null;
     const defaultTheme = savedTheme || 'dark';
-    
+
     // 确保HTML根元素有正确的类
     const root = document.documentElement.classList;
     if (defaultTheme === 'dark') {
@@ -14,7 +14,7 @@ export const useThemeStore = defineStore('theme', {
     } else {
       root.remove('dark');
     }
-    
+
     return {
       mode: defaultTheme,
     };
@@ -35,5 +35,3 @@ export const useThemeStore = defineStore('theme', {
     },
   },
 });
-
-

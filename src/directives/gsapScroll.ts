@@ -15,7 +15,10 @@ type GsapOptions = {
   once?: boolean;
 };
 
-function getFrom(opts: Required<Pick<GsapOptions, 'direction' | 'distance'>> & Omit<GsapOptions, 'direction' | 'distance'>) {
+function getFrom(
+  opts: Required<Pick<GsapOptions, 'direction' | 'distance'>> &
+    Omit<GsapOptions, 'direction' | 'distance'>,
+) {
   const { direction, distance } = opts;
   const base: Record<string, number> = { opacity: 0 } as any;
   if (direction === 'left') base.x = -distance;
@@ -29,10 +32,10 @@ function getFrom(opts: Required<Pick<GsapOptions, 'direction' | 'distance'>> & O
 }
 
 export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> = {
-  async mounted(el, binding) {
+  async mounted(el) {
     const effects = useEffectsStore();
     const value = binding.value;
-    const options: GsapOptions = typeof value === 'string' ? { direction: value } : (value || {});
+    const options: GsapOptions = typeof value === 'string' ? { direction: value } : value || {};
     const opts: Required<GsapOptions> = {
       direction: options.direction ?? 'up',
       distance: options.distance ?? 72,
@@ -57,7 +60,7 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
         if (gsap) {
           gsap.killTweensOf(el);
         }
-      } catch (err) {
+      } catch {
         // ignore
       }
       return;
@@ -74,7 +77,7 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
       if (gsap && ScrollTrigger) {
         gsap.registerPlugin(ScrollTrigger);
       }
-    } catch (err) {
+    } catch {
       // ignore, fallback to CSS
     }
 
@@ -91,62 +94,66 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
         ease: opts.ease,
       };
 
-      const targets: HTMLElement[] = (opts.stagger && el.children && el.children.length)
-        ? (Array.from(el.children) as HTMLElement[])
-        : [el];
+      const targets: HTMLElement[] =
+        opts.stagger && el.children && el.children.length
+          ? (Array.from(el.children) as HTMLElement[])
+          : [el];
 
-      gsap.fromTo(
-        targets,
-        fromVars,
-        {
-          ...toVars,
-          stagger: opts.stagger,
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            end: 'top 50%',
-            toggleActions: opts.scrub ? 'play none none none' : 'play none none none',
-            scrub: opts.scrub,
-            once: opts.once,
-          },
+      gsap.fromTo(targets, fromVars, {
+        ...toVars,
+        stagger: opts.stagger,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          end: 'top 50%',
+          toggleActions: opts.scrub ? 'play none none none' : 'play none none none',
+          scrub: opts.scrub,
+          once: opts.once,
         },
-      );
+      });
     } else {
       // Fallback：使用 CSS 过渡 + IntersectionObserver
       const from = getFrom(opts);
-      el.style.transition = 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.transition =
+        'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)';
       el.style.opacity = '0';
       const transformParts: string[] = [];
-      if (typeof (from as any).x === 'number') transformParts.push(`translateX(${(from as any).x}px)`);
-      if (typeof (from as any).y === 'number') transformParts.push(`translateY(${(from as any).y}px)`);
+      if (typeof (from as any).x === 'number')
+        transformParts.push(`translateX(${(from as any).x}px)`);
+      if (typeof (from as any).y === 'number')
+        transformParts.push(`translateY(${(from as any).y}px)`);
       if ((from as any).rotate) transformParts.push(`rotate(${(from as any).rotate}deg)`);
       if ((from as any).skewY) transformParts.push(`skewY(${(from as any).skewY}deg)`);
       if ((from as any).scale) transformParts.push(`scale(${(from as any).scale})`);
       el.style.transform = transformParts.join(' ');
 
-      const io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            el.style.opacity = '1';
-            el.style.transform = 'translateX(0px) translateY(0px) rotate(0deg) skewY(0deg) scale(1)';
-            io.unobserve(el);
+      const io = new (window as any).IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              el.style.opacity = '1';
+              el.style.transform =
+                'translateX(0px) translateY(0px) rotate(0deg) skewY(0deg) scale(1)';
+              io.unobserve(el);
+            }
           }
-        }
-      }, { threshold: 0.15 });
+        },
+        { threshold: 0.15 },
+      );
       io.observe(el);
     }
   },
-  
+
   // 添加更新钩子，当动画状态改变时重新处理
-  updated(el, binding) {
+  updated(el) {
     const effects = useEffectsStore();
-    
+
     // 如果动画被关闭，清理所有动画效果
     if (!effects.animationsEnabled) {
       el.style.opacity = '1';
       el.style.transform = 'none';
       el.style.transition = 'none';
-      
+
       // 清理GSAP动画
       try {
         import(/* @vite-ignore */ 'gsap').then((gsapMod) => {
@@ -155,11 +162,9 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
             gsap.killTweensOf(el);
           }
         });
-      } catch (err) {
+      } catch {
         // ignore
       }
     }
   },
 };
-
-

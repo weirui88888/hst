@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# 运行 lint-staged 格式化/校验已暂存文件
+npx --yes lint-staged
