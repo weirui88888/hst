@@ -28,11 +28,21 @@ const getInitialSiteTitle = (): string => {
   }
 };
 
+const getInitialSiteEndText = (): string => {
+  try {
+    const stored = localStorage.getItem('hst_site_end_text');
+    return stored !== null ? stored : '— 已到时间轴结尾 —';
+  } catch {
+    return '— 已到时间轴结尾 —';
+  }
+};
+
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     timeAxisPosition: getInitialTimeAxisPosition(),
     seasonalIndicator: getInitialSeasonalIndicator(),
     siteTitle: getInitialSiteTitle(),
+    siteEndText: getInitialSiteEndText(),
   }),
   actions: {
     setTimeAxisPosition(position: string) {
@@ -47,6 +57,10 @@ export const useSettingsStore = defineStore('settings', {
       // 允许空字符串，以便用户清空标题后再输入
       this.siteTitle = title;
       this.saveSiteTitle();
+    },
+    setSiteEndText(text: string) {
+      this.siteEndText = text;
+      this.saveSiteEndText();
     },
     saveTimeAxisPosition() {
       try {
@@ -67,6 +81,13 @@ export const useSettingsStore = defineStore('settings', {
         localStorage.setItem('hst_site_title', this.siteTitle);
       } catch (error) {
         console.warn('Failed to save site title to localStorage:', error);
+      }
+    },
+    saveSiteEndText() {
+      try {
+        localStorage.setItem('hst_site_end_text', this.siteEndText);
+      } catch (error) {
+        console.warn('Failed to save site end text to localStorage:', error);
       }
     },
   },

@@ -80,10 +80,12 @@
       :animationsEnabled="effects.animationsEnabled"
       :timeAxisPosition="settings.timeAxisPosition"
       :siteTitle="settings.siteTitle"
+      :siteEndText="settings.siteEndText"
       @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
       @update:timeAxisPosition="settings.setTimeAxisPosition"
       @update:siteTitle="settings.setSiteTitle"
+      @update:siteEndText="settings.setSiteEndText"
     />
   </div>
 </template>

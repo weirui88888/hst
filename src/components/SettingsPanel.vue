@@ -115,13 +115,52 @@
                 </h4>
                 <p class="text-xs text-neutral-600 dark:text-neutral-300">修改页面左上角主标题</p>
               </div>
-              <input
-                v-model="localSiteTitle"
-                @input="onSiteTitleInput"
-                type="text"
-                placeholder="我的故事"
-                class="mt-3 w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
-              />
+              <div class="mt-3 flex items-center gap-2">
+                <input
+                  v-model="localSiteTitle"
+                  type="text"
+                  placeholder="我的故事"
+                  class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+                />
+                <button
+                  type="button"
+                  class="text-xs px-2 py-1 rounded-md bg-neutral-300 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-400 dark:hover:bg-neutral-600 transition-colors"
+                  style="border: none"
+                  @click="saveSiteTitle"
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+
+            <!-- 结尾文案设置 -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+            >
+              <div>
+                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  结尾文案
+                </h4>
+                <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                  设置时间轴底部的结尾提示文案
+                </p>
+              </div>
+              <div class="mt-3 flex items-center gap-2">
+                <input
+                  v-model="localSiteEndText"
+                  type="text"
+                  placeholder="— 已到时间轴结尾 —"
+                  class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+                />
+                <button
+                  type="button"
+                  class="text-xs px-2 py-1 rounded-md bg-neutral-300 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-400 dark:hover:bg-neutral-600 transition-colors"
+                  style="border: none"
+                  @click="saveSiteEndText"
+                >
+                  保存
+                </button>
+              </div>
             </div>
           </div>
 
@@ -243,6 +282,7 @@
       'update:modelValue',
       'update:timeAxisPosition',
       'update:siteTitle',
+      'update:siteEndText',
     ],
     props: {
       seasonalIndicator: {
@@ -265,11 +305,19 @@
         type: String,
         default: '我的故事',
       },
+      siteEndText: {
+        type: String,
+        default: '— 已到时间轴结尾 —',
+      },
     },
     setup(props: any, { emit }: any) {
       const localSiteTitle = computed({
         get: () => props.siteTitle,
         set: (v: string) => emit('update:siteTitle', v),
+      });
+      const localSiteEndText = computed({
+        get: () => (props as any).siteEndText,
+        set: (v: string) => emit('update:siteEndText', v),
       });
       const isOpen = computed({
         get: (): boolean => props.modelValue,
@@ -292,12 +340,11 @@
         emit('update:timeAxisPosition', position);
       };
 
-      let debounceTimer: number | undefined;
-      const onSiteTitleInput = () => {
-        if (debounceTimer) window.clearTimeout(debounceTimer);
-        debounceTimer = window.setTimeout(() => {
-          emit('update:siteTitle', String(localSiteTitle.value || '').trim());
-        }, 500);
+      const saveSiteTitle = () => {
+        emit('update:siteTitle', String(localSiteTitle.value || '').trim());
+      };
+      const saveSiteEndText = () => {
+        emit('update:siteEndText', String(localSiteEndText.value || '').trim());
       };
 
       return {
@@ -306,8 +353,10 @@
         toggleSeasonalIndicator,
         toggleAnimationsEnabled,
         setTimeAxisPosition,
-        onSiteTitleInput,
         localSiteTitle,
+        localSiteEndText,
+        saveSiteTitle,
+        saveSiteEndText,
       };
     },
   };

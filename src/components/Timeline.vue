@@ -112,7 +112,7 @@
       <div class="mt-20 flex flex-col items-center select-none">
         <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
         <div class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500">
-          — 已到时间轴结尾 —
+          {{ $settings?.siteEndText ?? settingsStore.siteEndText ?? '— 已到时间轴结尾 —' }}
         </div>
       </div>
     </div>
@@ -121,6 +121,7 @@
 
 <script lang="ts">
   import MediaPreview from './MediaPreview.vue';
+  import { useSettingsStore } from '../stores/settings';
 
   export default {
     name: 'Timeline',
@@ -787,6 +788,10 @@
 
       // 清理拖拽事件监听器
       this.stopDrag();
+    },
+    setup() {
+      const settingsStore = useSettingsStore();
+      return { settingsStore };
     },
   };
 </script>
