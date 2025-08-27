@@ -1,39 +1,78 @@
 <template>
   <section class="relative py-8">
+
+    
+    <!-- 时间轴线 -->
+    <div 
+      class="fixed top-1/2 -translate-y-1/2 z-50 hidden lg:block transition-all duration-300"
+      :class="timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
+    >
+      <div class="relative timeline-axis">
+        <!-- 时间轴竖线 -->
+        <div class="w-0.5 h-64 timeline-axis-line mx-auto"></div>
+        
+        <!-- 当前时间点 -->
+        <div 
+          class="absolute left-1/2 w-3 h-3 bg-neutral-600 dark:bg-neutral-400 rounded-full border-2 border-neutral-900 dark:border-neutral-100 -translate-x-1/2 transition-all duration-500 timeline-axis-point"
+          :style="timeAxisPositionStyle"
+        ></div>
+        
+        <!-- 当前时间显示 -->
+        <div 
+          class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-500"
+          :class="timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
+          :style="timeAxisPositionStyle"
+        >
+          {{ currentTimeDisplay }}
+        </div>
+      </div>
+    </div>
+    
     <div class="space-y-16">
       <article
         v-for="(item, index) in items"
-        :key="item.id"
+        :key="`${item.id}-${animationsEnabled}`"
         :ref="(el) => setSectionRef(el, index)"
-        class="relative transition-all duration-500 will-change-transform"
-        :class="articleClass(index)"
+        class="relative will-change-transform"
+        :class="[
+          animationsEnabled ? 'transition-all duration-500' : '',
+          articleClass(index)
+        ]"
       >
-        <!-- 连接线 -->
-        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-neutral-300 dark:via-neutral-600 to-transparent -translate-x-1/2"></div>
-        
-        <!-- 时间点 -->
-        <div class="absolute left-1/2 top-1/2 w-4 h-4 bg-neutral-600 rounded-full border-4 border-neutral-900 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-500" :class="timePointClass(index)"></div>
-        
-                <!-- 故事内容 -->
-        <div class="relative max-w-4xl mx-auto transition-all duration-700 ease-out" :class="storyClass(index)">
-          <div class="grid md:grid-cols-2 gap-8 items-center">
+        <!-- 故事内容 -->
+        <div 
+          class="relative max-w-4xl mx-auto" 
+          :class="[
+            animationsEnabled ? 'transition-all duration-700 ease-out' : '',
+            storyClass(index)
+          ]"
+        >
+          <div class="grid md:grid-cols-2 gap-12 items-center" :class="layoutClass(index)">
             <!-- 图片区域 -->
-            <div class="relative" v-gsap="{ direction: index % 2 === 0 ? 'right' : 'left', skew: 4, rotate: 1, distance: 80, ease: 'power3.out', duration: 0.9 }">
-              <div :style="imageFrameStyle(item)" class="w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
-                <MediaPreview :media="item.media" />
+            <div class="relative" :class="imageOrderClass(index)" v-gsap="imageAnimationProps(index)">
+              <div class="w-full rounded-2xl overflow-visible p-8">
+                <div 
+                  :style="imageFrameStyle(item)" 
+                  class="timeline-image w-full rounded-xl overflow-hidden"
+                  :class="[
+                    animationsEnabled ? 'transition-all duration-300 hover:scale-[1.02] animations-enabled' : ''
+                  ]"
+                >
+                  <MediaPreview :media="item.media" />
+                </div>
               </div>
             </div>
             
             <!-- 文字区域 -->
-            <div class="space-y-4" v-gsap="{ direction: index % 2 === 0 ? 'left' : 'right', distance: 60, ease: 'power2.out', scale: 0.98, stagger: 0.08 }">
+            <div class="space-y-4" :class="textOrderClass(index)" v-gsap="textAnimationProps(index)">
               <div>
-                <h3 class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-200">{{ item.title }}</h3>
-                <p class="text-neutral-300 leading-relaxed">{{ item.content }}</p>
+                <h3 class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200">{{ item.title }}</h3>
+                <p class="text-neutral-600 dark:text-neutral-300 leading-relaxed">{{ item.content }}</p>
               </div>
               
               <div class="flex flex-wrap gap-2 items-center">
-                <span class="px-3 py-1 rounded-full bg-neutral-700 text-neutral-300 text-sm font-medium" v-for="tag in item.tags" :key="tag">#{{ tag }}</span>
-                <span class="ml-auto text-sm text-neutral-400 font-medium">{{ item.date }}</span>
+                <span class="px-3 py-1 rounded-md bg-neutral-700 text-neutral-300 text-xs font-medium" v-for="tag in item.tags" :key="tag">#{{ tag }}</span>
+                <span class="ml-auto text-sm text-neutral-500 dark:text-neutral-400 font-medium">{{ item.date }}</span>
               </div>
             </div>
           </div>
@@ -51,6 +90,9 @@ export default {
   components: { MediaPreview },
   props: {
     items: { type: Array, default: () => [] },
+    seasonalIndicator: { type: Boolean, default: false },
+    animationsEnabled: { type: Boolean, default: true },
+    timeAxisPosition: { type: String, default: 'right' }, // 'left' 或 'right'
   },
   data() {
     return {
@@ -58,6 +100,36 @@ export default {
       sectionRefs: [] as HTMLElement[],
       rafId: 0 as number,
     };
+  },
+  computed: {
+    timeAxisPositionStyle() {
+      if (this.activeIndex === -1 || this.items.length === 0) {
+        return { top: '50%' };
+      }
+      
+      // 计算时间点在轴线上的位置
+      const progress = this.activeIndex / (this.items.length - 1);
+      const topPosition = 32 + (progress * 192); // 32px到224px之间
+      
+      return { top: `${topPosition}px` };
+    },
+    
+    currentTimeDisplay() {
+      if (this.activeIndex === -1 || this.items.length === 0) {
+        return '';
+      }
+      
+      const currentItem = this.items[this.activeIndex];
+      const date = currentItem?.date || '';
+      
+      if (this.seasonalIndicator && date) {
+        const month = this.getMonthFromDate(date);
+        const season = this.getSeasonFromMonth(month);
+        return `${season} ${date}`;
+      }
+      
+      return date;
+    }
   },
   methods: {
 
@@ -90,37 +162,232 @@ export default {
       }
     },
     onScroll() {
+      // 时间轴需要始终更新，但故事动画只在开启时处理
       if (this.rafId) cancelAnimationFrame(this.rafId);
-      this.rafId = requestAnimationFrame(this.updateActive);
+      this.rafId = requestAnimationFrame(() => {
+        this.updateActive();
+      });
     },
     articleClass(index: number) {
+      if (!this.animationsEnabled) {
+        return 'opacity-100'; // 动画关闭时，所有文章都保持完全不透明
+      }
       return index === this.activeIndex ? 'opacity-100' : 'opacity-60';
     },
     storyClass(index: number) {
+      if (!this.animationsEnabled) {
+        return 'scale-100 translate-y-0'; // 动画关闭时，所有故事都保持原始大小和位置
+      }
       if (index === this.activeIndex) {
         return 'scale-[1.02] md:scale-[1.05] -translate-y-4 md:-translate-y-6';
       }
       return 'scale-100 translate-y-0';
     },
-    timePointClass(index: number) {
-      if (index === this.activeIndex) {
-        return 'w-6 h-6 bg-neutral-400 shadow-lg shadow-neutral-400/30 scale-125';
-      }
-      return 'w-4 h-4';
+    layoutClass(index: number) {
+      // 随机决定图片在左还是右
+      const imagePositions = [true, false, true, false, true, true, false, false, true, false, true, false, true, true, false, true, false, false, true, false];
+      const imageOnLeft = imagePositions[index % imagePositions.length];
+      return imageOnLeft ? '' : 'md:grid-flow-col-dense';
     },
+    imageOrderClass(index: number) {
+      const imagePositions = [true, false, true, false, true, true, false, false, true, false, true, false, true, true, false, true, false, false, true, false];
+      const imageOnLeft = imagePositions[index % imagePositions.length];
+      return imageOnLeft ? 'order-1' : 'order-2';
+    },
+    textOrderClass(index: number) {
+      const imagePositions = [true, false, true, false, true, true, false, false, true, false, true, false, true, true, false, true, false, false, true, false];
+      const imageOnLeft = imagePositions[index % imagePositions.length];
+      return imageOnLeft ? 'order-2' : 'order-1';
+    },
+    imageAnimationProps(index: number) {
+      const imagePositions = [true, false, true, false, true, true, false, false, true, false, true, false, true, true, false, true, false, false, true, false];
+      const imageOnLeft = imagePositions[index % imagePositions.length];
+      return {
+        direction: imageOnLeft ? 'right' : 'left',
+        skew: 4,
+        rotate: 1,
+        distance: 80,
+        ease: 'power3.out',
+        duration: 0.9
+      };
+    },
+    textAnimationProps(index: number) {
+      const imagePositions = [true, false, true, false, true, true, false, false, true, false, true, false, true, true, false, true, false, false, true, false];
+      const imageOnLeft = imagePositions[index % imagePositions.length];
+      return {
+        direction: imageOnLeft ? 'left' : 'right',
+        distance: 60,
+        ease: 'power2.out',
+        scale: 0.98,
+        stagger: 0.08
+      };
+    },
+
     imageFrameStyle(item: any) {
       const media = item.media?.[0];
-      if (!media?.aspectRatio) return { aspectRatio: '16/9' };
+      let aspectRatio = '16/9';
       
-      // 解析比例字符串 (如 "16/9", "4/3", "1/1")
-      const [width, height] = media.aspectRatio.split('/').map(Number);
-      if (width && height) {
-        return { aspectRatio: `${width}/${height}` };
+      if (media?.aspectRatio) {
+        // 解析比例字符串 (如 "16/9", "4/3", "1/1")
+        const [width, height] = media.aspectRatio.split('/').map(Number);
+        if (width && height) {
+          aspectRatio = `${width}/${height}`;
+        }
+      } else {
+        // 如果没有指定比例，则随机生成一个比例
+        aspectRatio = this.getRandomAspectRatio(item.id);
       }
-      return { aspectRatio: '16/9' };
+      
+      // 为每个图片生成随机的倾斜角度和阴影偏移
+      const rotation = this.getRandomRotation(item.id);
+      const shadowOffset = this.getRandomShadowOffset(item.id);
+      
+      return { 
+        aspectRatio,
+        transform: `rotate(${rotation}deg)`,
+        boxShadow: `${shadowOffset.x}px ${shadowOffset.y}px 20px rgba(0, 0, 0, 0.3)`,
+        transition: 'all 0.3s ease-out'
+      };
+    },
+    
+    getRandomRotation(itemId: string) {
+      // 使用itemId作为种子来生成一致的随机角度
+      let hash = 0;
+      for (let i = 0; i < itemId.length; i++) {
+        const char = itemId.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // 转换为32位整数
+      }
+      
+      // 生成-8到8度之间的随机角度，但大部分图片保持接近0度
+      const randomValue = Math.abs(hash) % 100;
+      
+      // 65%的概率保持接近0度（-1到1度）
+      if (randomValue < 65) {
+        return ((hash % 21) - 10) / 10; // -1到1度
+      }
+      // 25%的概率轻微倾斜（-3到3度）
+      else if (randomValue < 90) {
+        return ((hash % 61) - 30) / 10; // -3到3度
+      }
+      // 8%的概率中等倾斜（-5到5度）
+      else if (randomValue < 98) {
+        return ((hash % 101) - 50) / 10; // -5到5度
+      }
+      // 2%的概率较大倾斜（-8到8度）
+      else {
+        return ((hash % 161) - 80) / 10; // -8到8度
+      }
+    },
+    
+    getRandomAspectRatio(itemId: string) {
+      // 使用itemId + "aspect"作为种子来生成随机比例
+      const seed = itemId + "aspect";
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) {
+        const char = seed.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      // 生成0-100的随机值
+      const randomValue = Math.abs(hash) % 100;
+      
+      // 根据概率分布选择比例
+      if (randomValue < 35) {
+        // 35%概率：16/9 宽屏（最常见的现代比例）
+        return '16/9';
+      } else if (randomValue < 55) {
+        // 20%概率：4/3 标准比例
+        return '4/3';
+      } else if (randomValue < 70) {
+        // 15%概率：1/1 正方形
+        return '1/1';
+      } else if (randomValue < 80) {
+        // 10%概率：3/2 经典比例
+        return '3/2';
+      } else if (randomValue < 88) {
+        // 8%概率：5/4 经典比例
+        return '5/4';
+      } else if (randomValue < 94) {
+        // 6%概率：3/4 竖屏
+        return '3/4';
+      } else if (randomValue < 98) {
+        // 4%概率：21/9 超宽屏
+        return '21/9';
+      } else {
+        // 2%概率：2/3 竖屏
+        return '2/3';
+      }
+    },
+    
+    getRandomShadowOffset(itemId: string) {
+      // 使用itemId + "shadow"作为种子来生成阴影偏移
+      const seed = itemId + "shadow";
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) {
+        const char = seed.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      // 生成-12到12像素的随机偏移，但大部分保持较小偏移
+      const randomValue = Math.abs(hash) % 100;
+      
+      let x, y;
+      if (randomValue < 70) {
+        // 70%概率：小偏移（-4到4像素）
+        x = ((hash % 81) - 40) / 10;
+        y = (((hash * 31) % 81) - 40) / 10;
+      } else if (randomValue < 90) {
+        // 20%概率：中等偏移（-8到8像素）
+        x = ((hash % 161) - 80) / 10;
+        y = (((hash * 31) % 161) - 80) / 10;
+      } else {
+        // 10%概率：较大偏移（-12到12像素）
+        x = ((hash % 241) - 120) / 10;
+        y = (((hash * 31) % 241) - 120) / 10;
+      }
+      
+      return { x, y };
+    },
+    
+    getMonthFromDate(dateString: string) {
+      // 尝试从日期字符串中提取月份
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.getMonth() + 1; // 返回1-12的月份
+      }
+      
+      // 如果无法解析，尝试从字符串中匹配月份
+      const monthMatch = dateString.match(/(\d{1,2})[\/\-](\d{1,2})/);
+      if (monthMatch) {
+        return parseInt(monthMatch[2]); // 假设格式为 MM/DD 或 MM-DD
+      }
+      
+      // 尝试匹配ISO格式 yyyy-mm-dd
+      const isoMatch = dateString.match(/(\d{4})-(\d{1,2})/);
+      if (isoMatch) {
+        return parseInt(isoMatch[2]); // 返回月份
+      }
+      
+      return 1; // 默认返回1月
+    },
+    
+    getSeasonFromMonth(month: number) {
+      if (month >= 3 && month <= 5) {
+        return '🌱春';
+      } else if (month >= 6 && month <= 8) {
+        return '🌞夏';
+      } else if (month >= 9 && month <= 11) {
+        return '🍂秋';
+      } else {
+        return '❄️冬';
+      }
     },
   },
   mounted() {
+    // 时间轴需要始终工作，所以滚动监听器要始终添加
     this.updateActive();
     window.addEventListener('scroll', this.onScroll as any, { passive: true } as any);
     window.addEventListener('resize', this.onScroll as any, { passive: true } as any);
@@ -134,6 +401,62 @@ export default {
 </script>
 
 <style scoped>
+    /* 图片倾斜效果增强 */
+    .timeline-image {
+      transform-origin: center center;
+      backface-visibility: hidden;
+    }
+
+    /* 悬停时的动画效果 - 只在动画开启时生效 */
+    .timeline-image.animations-enabled:hover {
+      transform: scale(1.03) rotate(var(--rotation, 0deg)) !important;
+      box-shadow: var(--shadow-x, 0px) var(--shadow-y, 0px) 15px rgba(0, 0, 0, 0.3) !important;
+      z-index: 10;
+    }
+
+    /* 确保图片在倾斜时不会超出容器 */
+    .overflow-visible {
+      overflow: visible !important;
+    }
+
+    /* 添加一些微妙的背景装饰 - 只在动画开启时生效 */
+    .timeline-image::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .timeline-image.animations-enabled:hover::before {
+      opacity: 1;
+    }
+
+    /* 时间轴线样式 */
+    .timeline-axis {
+      border-radius: 20px;
+      padding: 20px 10px;
+    }
+
+    .timeline-axis-line {
+      background: linear-gradient(to bottom, 
+        transparent 0%, 
+        rgba(156, 163, 175, 0.3) 20%, 
+        rgba(156, 163, 175, 0.6) 50%, 
+        rgba(156, 163, 175, 0.3) 80%, 
+        transparent 100%
+      );
+    }
+
+    .timeline-axis-point {
+      box-shadow: 0 0 10px rgba(156, 163, 175, 0.4);
+    }
 </style>
 
 

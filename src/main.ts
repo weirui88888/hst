@@ -12,7 +12,11 @@ app.directive('gsap', vGsap);
 
 // 初始化主题（从localStorage读取）
 const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark' || !savedTheme) document.documentElement.classList.add('dark');
+if (savedTheme === 'dark' || !savedTheme) {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
 
 app.mount('#app');
 

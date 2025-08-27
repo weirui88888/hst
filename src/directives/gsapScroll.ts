@@ -46,9 +46,20 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
       once: options.once ?? true,
     } as Required<GsapOptions>;
 
-    // 若关闭动画，直接显示
+    // 若关闭动画，直接显示并清理可能的动画
     if (!effects.animationsEnabled) {
       el.style.opacity = '1';
+      el.style.transform = 'none';
+      // 清理可能的GSAP动画
+      try {
+        const gsapMod = await import(/* @vite-ignore */ 'gsap');
+        const gsap = gsapMod?.default ?? gsapMod;
+        if (gsap) {
+          gsap.killTweensOf(el);
+        }
+      } catch (err) {
+        // ignore
+      }
       return;
     }
 
@@ -123,6 +134,30 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
         }
       }, { threshold: 0.15 });
       io.observe(el);
+    }
+  },
+  
+  // 添加更新钩子，当动画状态改变时重新处理
+  updated(el, binding) {
+    const effects = useEffectsStore();
+    
+    // 如果动画被关闭，清理所有动画效果
+    if (!effects.animationsEnabled) {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+      el.style.transition = 'none';
+      
+      // 清理GSAP动画
+      try {
+        import(/* @vite-ignore */ 'gsap').then((gsapMod) => {
+          const gsap = gsapMod?.default ?? gsapMod;
+          if (gsap) {
+            gsap.killTweensOf(el);
+          }
+        });
+      } catch (err) {
+        // ignore
+      }
     }
   },
 };
