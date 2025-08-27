@@ -104,7 +104,7 @@
   const title = computed(() => (theme.mode === 'dark' ? '切换到浅色' : '切换到深色'));
   const toggle = () => theme.toggleTheme();
 
-  const isOpen = ref(false);
+  const isOpen = ref(true);
   const openForm = () => (isOpen.value = true);
 
   const effects = useEffectsStore();
