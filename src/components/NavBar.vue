@@ -29,12 +29,12 @@
     <UploadDialog v-model="isOpen" />
     <SettingsPanel 
       v-model="settingsOpen"
-      :seasonalIndicator="props.seasonalIndicator"
+      :seasonalIndicator="settings.seasonalIndicator"
       :animationsEnabled="effects.animationsEnabled"
-      :timeAxisPosition="timeAxisPosition"
-      @update:seasonalIndicator="updateSeasonalIndicator"
+      :timeAxisPosition="settings.timeAxisPosition"
+      @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
-      @update:timeAxisPosition="updateTimeAxisPosition"
+      @update:timeAxisPosition="settings.setTimeAxisPosition"
     />
   </div>
 </template>
@@ -43,16 +43,11 @@
 import { computed, ref } from 'vue';
 import { useThemeStore } from '../stores/theme';
 import { useEffectsStore } from '../stores/effects';
+import { useSettingsStore } from '../stores/settings';
 import UploadDialog from './UploadDialog.vue';
 import SettingsPanel from './SettingsPanel.vue';
 
-// Props
-const props = defineProps<{
-  seasonalIndicator: boolean;
-  timeAxisPosition: string;
-}>();
-
-const emit = defineEmits(['update:seasonalIndicator', 'update:timeAxisPosition']);
+const settings = useSettingsStore();
 
 const theme = useThemeStore();
 const title = computed(() => (theme.mode === 'dark' ? '切换到浅色' : '切换到深色'));
@@ -68,16 +63,8 @@ const openSettings = () => {
   settingsOpen.value = !settingsOpen.value;
 };
 
-const updateSeasonalIndicator = (value: boolean) => {
-  emit('update:seasonalIndicator', value);
-};
-
 const updateAnimationsEnabled = (value: boolean) => {
-  effects.animationsEnabled = value;
-};
-
-const updateTimeAxisPosition = (value: string) => {
-  emit('update:timeAxisPosition', value);
+  effects.setAnimationsEnabled(value);
 };
 </script>
 

@@ -9,18 +9,24 @@
     >
       <div class="relative timeline-axis">
         <!-- 时间轴竖线 -->
-        <div class="w-0.5 h-64 timeline-axis-line mx-auto"></div>
+        <div 
+          class="w-0.5 h-64 timeline-axis-line mx-auto cursor-pointer"
+          @click="handleTimelineClick"
+        ></div>
         
         <!-- 当前时间点 -->
         <div 
-          class="absolute left-1/2 w-3 h-3 bg-neutral-600 dark:bg-neutral-400 rounded-full border-2 border-neutral-900 dark:border-neutral-100 -translate-x-1/2 transition-all duration-500 timeline-axis-point"
+          class="absolute left-1/2 w-3 h-3 bg-neutral-600 dark:bg-neutral-400 rounded-full border-2 border-neutral-900 dark:border-neutral-100 -translate-x-1/2 -translate-y-1/2 transition-all duration-200 timeline-axis-point cursor-pointer hover:scale-110 hover:bg-neutral-500 dark:hover:bg-neutral-300"
+          :class="{ 'duration-0': isDragging || isAutoScrolling }"
           :style="timeAxisPositionStyle"
+          @mousedown="startDrag"
+          @touchstart="startDrag"
         ></div>
         
         <!-- 当前时间显示 -->
         <div 
-          class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-500"
-          :class="timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
+          class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-200"
+          :class="[ timeAxisPosition === 'left' ? 'left-6' : 'right-6', (isDragging || isAutoScrolling) ? 'duration-0' : '' ]"
           :style="timeAxisPositionStyle"
         >
           {{ currentTimeDisplay }}
@@ -99,6 +105,13 @@ export default {
       activeIndex: -1 as number,
       sectionRefs: [] as HTMLElement[],
       rafId: 0 as number,
+      isDragging: false as boolean,
+      dragStartY: 0 as number,
+      timelineAxisTop: 0 as number,
+      timelineAxisHeight: 0 as number,
+      // 平滑滚动状态，用于抑制updateActive抖动
+      isAutoScrolling: false as boolean,
+      autoScrollTimer: 0 as any,
     };
   },
   computed: {
@@ -109,7 +122,10 @@ export default {
       
       // 计算时间点在轴线上的位置
       const progress = this.activeIndex / (this.items.length - 1);
-      const topPosition = 32 + (progress * 192); // 32px到224px之间
+      const minY = 32;
+      const maxY = 224;
+      const clickableRange = maxY - minY;
+      const topPosition = minY + (progress * clickableRange);
       
       return { top: `${topPosition}px` };
     },
@@ -136,7 +152,135 @@ export default {
     setSectionRef(el: Element | null, idx: number) {
       if (el) this.sectionRefs[idx] = el as HTMLElement;
     },
+    
+    startDrag(event: MouseEvent | TouchEvent) {
+      event.preventDefault();
+      this.isDragging = true;
+      
+      // 获取时间轴的位置信息
+      const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
+      if (timelineAxis) {
+        const rect = timelineAxis.getBoundingClientRect();
+        this.timelineAxisTop = rect.top;
+        this.timelineAxisHeight = rect.height;
+      }
+      
+      // 记录起始位置
+      const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+      this.dragStartY = clientY;
+      
+      // 添加事件监听器
+      document.addEventListener('mousemove', this.onDrag);
+      document.addEventListener('touchmove', this.onDrag, { passive: false });
+      document.addEventListener('mouseup', this.stopDrag);
+      document.addEventListener('touchend', this.stopDrag);
+      
+      // 防止文本选择
+      document.body.style.userSelect = 'none';
+    },
+    
+    onDrag(event: MouseEvent | TouchEvent) {
+      if (!this.isDragging) return;
+      
+      event.preventDefault();
+      const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+      
+      // 计算在时间轴上的相对位置
+      const relativeY = clientY - this.timelineAxisTop;
+      
+      // 计算圆点的实际活动范围（与timeAxisPositionStyle保持一致）
+      const minY = 32;
+      const maxY = 224;
+      const clickableRange = maxY - minY;
+      
+      // 将拖拽位置映射到圆点的活动范围
+      const relativeDragY = Math.max(minY, Math.min(maxY, relativeY));
+      const progress = (relativeDragY - minY) / clickableRange;
+      
+      // 根据进度计算对应的故事索引
+      const newIndex = Math.round(progress * (this.items.length - 1));
+      
+      // 更新活动索引
+      if (newIndex !== this.activeIndex && newIndex >= 0 && newIndex < this.items.length) {
+        this.activeIndex = newIndex;
+      }
+    },
+    
+    stopDrag() {
+      this.isDragging = false;
+      
+      // 移除事件监听器
+      document.removeEventListener('mousemove', this.onDrag);
+      document.removeEventListener('touchmove', this.onDrag);
+      document.removeEventListener('mouseup', this.stopDrag);
+      document.removeEventListener('touchend', this.stopDrag);
+      
+      // 松手后一次性滚动到对应位置，避免徘徊
+      if (this.activeIndex >= 0) {
+        this.scrollToStory(this.activeIndex);
+      }
+      
+      // 恢复文本选择
+      document.body.style.userSelect = '';
+    },
+    
+    scrollToStory(index: number) {
+      const targetElement = this.sectionRefs[index];
+      if (targetElement) {
+        const rect = targetElement.getBoundingClientRect();
+        const viewportCenter = window.innerHeight / 2;
+        const targetCenter = rect.top + rect.height / 2;
+        const scrollOffset = targetCenter - viewportCenter;
+        
+        // 程序化滚动（瞬时），避免视觉徘徊
+        this.isAutoScrolling = true;
+        if (this.autoScrollTimer) window.clearTimeout(this.autoScrollTimer);
+        this.autoScrollTimer = window.setTimeout(() => {
+          this.isAutoScrolling = false;
+        }, 120);
+
+        window.scrollBy({
+          top: scrollOffset,
+          behavior: 'auto'
+        });
+      }
+    },
+    
+    handleTimelineClick(event: MouseEvent) {
+      // 如果正在拖拽，不处理点击
+      if (this.isDragging) return;
+      
+      // 获取时间轴的位置信息
+      const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
+      if (!timelineAxis) return;
+      
+      const rect = timelineAxis.getBoundingClientRect();
+      const clickY = event.clientY - rect.top;
+      
+      // 计算圆点的实际活动范围（与timeAxisPositionStyle保持一致）
+      const minY = 32;
+      const maxY = 224;
+      const clickableRange = maxY - minY;
+      
+      // 将点击位置映射到圆点的活动范围
+      const relativeClickY = Math.max(minY, Math.min(maxY, clickY));
+      const progress = (relativeClickY - minY) / clickableRange;
+      
+      // 根据进度计算对应的故事索引
+      const newIndex = Math.round(progress * (this.items.length - 1));
+      
+      // 确保索引在有效范围内，并且允许点击到相同位置
+      if (newIndex >= 0 && newIndex < this.items.length) {
+        this.activeIndex = newIndex;
+        
+        // 立即滚动到对应的故事位置
+        this.scrollToStory(newIndex);
+      }
+    },
     updateActive() {
+      // 如果正在拖拽，不更新活动索引
+      if (this.isDragging || this.isAutoScrolling) return;
+      
       const viewportCenter = window.innerHeight / 2;
       let best = -1;
       let bestDist = Number.POSITIVE_INFINITY;
@@ -396,6 +540,9 @@ export default {
     window.removeEventListener('scroll', this.onScroll as any);
     window.removeEventListener('resize', this.onScroll as any);
     if (this.rafId) cancelAnimationFrame(this.rafId);
+    
+    // 清理拖拽事件监听器
+    this.stopDrag();
   },
 };
 </script>

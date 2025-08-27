@@ -81,24 +81,16 @@
                   <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">时间轴位置</h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">{{ timeAxisPosition === 'left' ? '显示在左侧' : '显示在右侧' }}</p>
                 </div>
-                <!-- 圆形开关 -->
+                <!-- 自定义开关 -->
                 <div class="flex items-center">
                   <button
                     @click="setTimeAxisPosition(timeAxisPosition === 'left' ? 'right' : 'left')"
-                    class="relative w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none overflow-hidden border-none"
-                    :class="timeAxisPosition === 'right' 
-                      ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30' 
-                      : 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'"
+                    class="relative w-8 h-6 bg-neutral-600 dark:bg-neutral-500 rounded-sm transition-all duration-200 focus:outline-none border-none hover:bg-neutral-500 dark:hover:bg-neutral-400"
                   >
-                    <!-- 选中状态的对勾图标 -->
-                    <svg 
-                      v-if="timeAxisPosition === 'right'"
-                      class="w-3 h-3 text-white transition-all duration-200 flex-shrink-0"
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
+                    <div 
+                      class="absolute top-1/2 w-1 h-3/5 bg-yellow-500 rounded-sm shadow-sm transition-all duration-200 -translate-y-1/2"
+                      :class="timeAxisPosition === 'right' ? 'left-6' : 'left-1'"
+                    ></div>
                   </button>
                   <!-- 状态指示文字 -->
                   <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
