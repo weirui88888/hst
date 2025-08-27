@@ -1,12 +1,12 @@
 <template>
-  <div class="w-full h-full flex items-center justify-center overflow-hidden">
+  <div class="w-full md:h-full md:flex md:items-center md:justify-center overflow-hidden">
     <template v-if="validMedia.length">
       <component
         :is="mediaComponent(m)"
         v-for="(m, i) in validMedia"
         :key="i"
         :src="m.url"
-        class="w-full h-full object-cover"
+        class="block max-w-full w-full h-auto object-cover"
         controls
         v-bind="extraProps(m)"
       ></component>
@@ -39,4 +39,28 @@
   });
 </script>
 
-<style scoped></style>
+<style scoped>
+  /* 媒体在小屏强制不产生横向溢出 */
+  :deep(img),
+  :deep(video) {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  @media (max-width: 450px) {
+    :deep(video),
+    :deep(img) {
+      object-fit: cover;
+    }
+  }
+  /* 桌面端：当父容器（如 .timeline-image）设定了固定比例时，
+     子元素填满容器避免上下出现背景（看起来像黑边） */
+  @media (min-width: 768px) {
+    :deep(video),
+    :deep(img) {
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+</style>

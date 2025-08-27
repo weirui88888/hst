@@ -2,7 +2,7 @@
   <section class="relative py-8">
     <!-- 时间轴线 -->
     <div
-      class="fixed top-1/2 -translate-y-1/2 z-50 hidden lg:block transition-all duration-300"
+      class="fixed top-1/2 -translate-y-1/2 z-50 hidden md:block transition-all duration-300"
       :class="timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
     >
       <div class="relative timeline-axis">
@@ -51,20 +51,23 @@
             storyClass(index),
           ]"
         >
-          <div class="grid md:grid-cols-2 gap-12 items-center" :class="layoutClass(index)">
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-start"
+            :class="layoutClass(index)"
+          >
             <!-- 图片区域 -->
             <div
               class="relative"
               :class="imageOrderClass(index)"
               v-gsap="imageAnimationProps(index)"
             >
-              <div class="w-full rounded-2xl overflow-visible p-8">
+              <div class="w-full rounded-2xl overflow-hidden md:overflow-visible p-0 md:p-8">
                 <div
                   :style="imageFrameStyle(item)"
                   class="timeline-image w-full rounded-xl overflow-hidden"
                   :class="[
                     animationsEnabled
-                      ? 'transition-all duration-300 hover:scale-[1.02] animations-enabled'
+                      ? 'transition-all duration-300 md:hover:scale-[1.02] animations-enabled'
                       : '',
                   ]"
                 >
@@ -75,7 +78,7 @@
 
             <!-- 文字区域 -->
             <div
-              class="space-y-4"
+              class="space-y-3 md:space-y-4 px-4 md:px-0"
               :class="textOrderClass(index)"
               v-gsap="textAnimationProps(index)"
             >
@@ -489,7 +492,8 @@
           false,
         ];
         const imageOnLeft = imagePositions[index % imagePositions.length];
-        return imageOnLeft ? 'order-1' : 'order-2';
+        // 移动端：图片永远在上（order-1）；桌面端保留左右交错
+        return imageOnLeft ? 'order-1 md:order-1' : 'order-1 md:order-2';
       },
       textOrderClass(index: number) {
         const imagePositions = [
@@ -515,7 +519,8 @@
           false,
         ];
         const imageOnLeft = imagePositions[index % imagePositions.length];
-        return imageOnLeft ? 'order-2' : 'order-1';
+        // 移动端：文字永远在下（order-2）；桌面端保留左右交错
+        return imageOnLeft ? 'order-2 md:order-2' : 'order-2 md:order-1';
       },
       imageAnimationProps(index: number) {
         const imagePositions = [
@@ -585,7 +590,7 @@
 
       imageFrameStyle(item: any) {
         const media = item.media?.[0];
-        let aspectRatio = '16/9';
+        let aspectRatio: string | undefined = undefined;
 
         if (media?.aspectRatio) {
           // 解析比例字符串 (如 "16/9", "4/3", "1/1")
@@ -593,21 +598,31 @@
           if (width && height) {
             aspectRatio = `${width}/${height}`;
           }
-        } else {
-          // 如果没有指定比例，则随机生成一个比例
-          aspectRatio = this.getRandomAspectRatio(item.id);
         }
 
-        // 为每个图片生成随机的倾斜角度和阴影偏移
+        // 小屏（<=450px）禁用倾斜/阴影，并移除固定比例，避免包裹 div 高度大于图片
+        const isNarrow = typeof window !== 'undefined' && window.innerWidth <= 450;
+        if (isNarrow) {
+          const style: Partial<CSSStyleDeclaration> = {
+            transform: 'none',
+            boxShadow: 'none',
+          };
+          // 移动端不强加比例，完全遵循媒资本身尺寸
+          return style;
+        }
+
         const rotation = this.getRandomRotation(item.id);
         const shadowOffset = this.getRandomShadowOffset(item.id);
 
-        return {
-          aspectRatio,
+        const style: Partial<CSSStyleDeclaration> = {
           transform: `rotate(${rotation}deg)`,
           boxShadow: `${shadowOffset.x}px ${shadowOffset.y}px 20px rgba(0, 0, 0, 0.3)`,
           transition: 'all 0.3s ease-out',
         };
+        if (aspectRatio) {
+          (style as any).aspectRatio = aspectRatio;
+        }
+        return style;
       },
 
       getRandomRotation(itemId: string) {
@@ -839,5 +854,17 @@
 
   .timeline-axis-point {
     box-shadow: 0 0 10px rgba(156, 163, 175, 0.4);
+  }
+
+  /* 窄屏：禁用倾斜与放大，强制隐藏横向溢出 */
+  @media (max-width: 450px) {
+    .timeline-image {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    .timeline-image.animations-enabled:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
   }
 </style>
