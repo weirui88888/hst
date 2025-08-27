@@ -77,10 +77,18 @@
                   <button
                     @click="toggleAnimationsEnabled"
                     class="relative w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none overflow-hidden border-none"
-                    :class="
+                    :style="
                       animationsEnabled
-                        ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30'
-                        : 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        ? {
+                            backgroundColor: 'var(--site-main-color)',
+                            boxShadow: `0 0 0 4px var(--site-main-color-30)`,
+                          }
+                        : {}
+                    "
+                    :class="
+                      !animationsEnabled
+                        ? 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        : ''
                     "
                   >
                     <!-- 选中状态的对勾图标 -->
@@ -188,7 +196,8 @@
                     class="relative w-8 h-6 bg-neutral-600 dark:bg-neutral-500 rounded-sm transition-all duration-200 focus:outline-none border-none hover:bg-neutral-500 dark:hover:bg-neutral-400"
                   >
                     <div
-                      class="absolute top-1/2 w-1 h-3/5 bg-yellow-500 rounded-sm shadow-sm transition-all duration-200 -translate-y-1/2"
+                      class="absolute top-1/2 w-1 h-3/5 rounded-sm shadow-sm transition-all duration-200 -translate-y-1/2"
+                      :style="{ backgroundColor: 'var(--site-main-color)' }"
                       :class="timeAxisPosition === 'right' ? 'left-6' : 'left-1'"
                     ></div>
                   </button>
@@ -218,10 +227,18 @@
                   <button
                     @click="toggleSeasonalIndicator"
                     class="relative w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none overflow-hidden border-none"
-                    :class="
+                    :style="
                       seasonalIndicator
-                        ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30'
-                        : 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        ? {
+                            backgroundColor: 'var(--site-main-color)',
+                            boxShadow: `0 0 0 4px var(--site-main-color-30)`,
+                          }
+                        : {}
+                    "
+                    :class="
+                      !seasonalIndicator
+                        ? 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        : ''
                     "
                   >
                     <!-- 选中状态的对勾图标 -->

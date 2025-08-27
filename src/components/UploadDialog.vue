@@ -50,12 +50,27 @@
         </div>
         <div>
           <label class="block text-sm mb-1 text-neutral-800 dark:text-neutral-200">日期</label>
-          <input
-            type="date"
+          <DatePicker
             v-model="date"
-            class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
-            required
-          />
+            :model-config="{ type: 'string', mask: 'YYYY-MM-DD' }"
+            :popover="{ visibility: 'focus' }"
+            :is24hr="true"
+            color="accent"
+            :teleport="true"
+            :transparent="true"
+            :borderless="true"
+            class="w-full"
+          >
+            <template #default="{ inputValue, inputEvents }">
+              <input
+                :value="inputValue"
+                v-on="inputEvents"
+                readonly
+                placeholder="YYYY-MM-DD"
+                class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+              />
+            </template>
+          </DatePicker>
         </div>
         <div>
           <label class="block text-sm mb-1 text-neutral-800 dark:text-neutral-200">媒体</label>
