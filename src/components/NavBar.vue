@@ -4,7 +4,9 @@
       class="sticky top-0 z-50 backdrop-blur bg-white/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800"
     >
       <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <h1 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">我的故事</h1>
+        <h1 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+          {{ settings.siteTitle || '我的故事' }}
+        </h1>
         <div class="flex items-center gap-3">
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
@@ -77,9 +79,11 @@
       :seasonalIndicator="settings.seasonalIndicator"
       :animationsEnabled="effects.animationsEnabled"
       :timeAxisPosition="settings.timeAxisPosition"
+      :siteTitle="settings.siteTitle"
       @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
       @update:timeAxisPosition="settings.setTimeAxisPosition"
+      @update:siteTitle="settings.setSiteTitle"
     />
   </div>
 </template>

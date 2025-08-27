@@ -19,10 +19,20 @@ const getInitialSeasonalIndicator = (): boolean => {
   }
 };
 
+const getInitialSiteTitle = (): string => {
+  try {
+    const stored = localStorage.getItem('hst_site_title');
+    return stored !== null ? stored : '我的故事';
+  } catch {
+    return '我的故事';
+  }
+};
+
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     timeAxisPosition: getInitialTimeAxisPosition(),
     seasonalIndicator: getInitialSeasonalIndicator(),
+    siteTitle: getInitialSiteTitle(),
   }),
   actions: {
     setTimeAxisPosition(position: string) {
@@ -32,6 +42,11 @@ export const useSettingsStore = defineStore('settings', {
     setSeasonalIndicator(enabled: boolean) {
       this.seasonalIndicator = enabled;
       this.saveSeasonalIndicator();
+    },
+    setSiteTitle(title: string) {
+      // 允许空字符串，以便用户清空标题后再输入
+      this.siteTitle = title;
+      this.saveSiteTitle();
     },
     saveTimeAxisPosition() {
       try {
@@ -45,6 +60,13 @@ export const useSettingsStore = defineStore('settings', {
         localStorage.setItem('hst_seasonal_indicator', JSON.stringify(this.seasonalIndicator));
       } catch (error) {
         console.warn('Failed to save seasonal indicator to localStorage:', error);
+      }
+    },
+    saveSiteTitle() {
+      try {
+        localStorage.setItem('hst_site_title', this.siteTitle);
+      } catch (error) {
+        console.warn('Failed to save site title to localStorage:', error);
       }
     },
   },

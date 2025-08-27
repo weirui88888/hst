@@ -104,6 +104,25 @@
                 </div>
               </div>
             </div>
+
+            <!-- 站点标题设置 -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+            >
+              <div>
+                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  站点标题
+                </h4>
+                <p class="text-xs text-neutral-600 dark:text-neutral-300">修改页面左上角主标题</p>
+              </div>
+              <input
+                v-model="localSiteTitle"
+                @input="onSiteTitleInput"
+                type="text"
+                placeholder="我的故事"
+                class="mt-3 w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+              />
+            </div>
           </div>
 
           <!-- 时间轴设置 -->
@@ -223,6 +242,7 @@
       'update:animationsEnabled',
       'update:modelValue',
       'update:timeAxisPosition',
+      'update:siteTitle',
     ],
     props: {
       seasonalIndicator: {
@@ -241,11 +261,19 @@
         type: Boolean,
         default: false,
       },
+      siteTitle: {
+        type: String,
+        default: '我的故事',
+      },
     },
-    setup(props, { emit }) {
+    setup(props: any, { emit }: any) {
+      const localSiteTitle = computed({
+        get: () => props.siteTitle,
+        set: (v: string) => emit('update:siteTitle', v),
+      });
       const isOpen = computed({
-        get: () => props.modelValue,
-        set: (value) => emit('update:modelValue', value),
+        get: (): boolean => props.modelValue,
+        set: (value: boolean) => emit('update:modelValue', value),
       });
 
       const toggleSettings = () => {
@@ -264,12 +292,22 @@
         emit('update:timeAxisPosition', position);
       };
 
+      let debounceTimer: number | undefined;
+      const onSiteTitleInput = () => {
+        if (debounceTimer) window.clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(() => {
+          emit('update:siteTitle', String(localSiteTitle.value || '').trim());
+        }, 500);
+      };
+
       return {
         isOpen,
         toggleSettings,
         toggleSeasonalIndicator,
         toggleAnimationsEnabled,
         setTimeAxisPosition,
+        onSiteTitleInput,
+        localSiteTitle,
       };
     },
   };
