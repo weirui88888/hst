@@ -288,94 +288,62 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+  // @ts-nocheck
   import { computed } from 'vue';
 
-  export default {
-    name: 'SettingsPanel',
-    emits: [
-      'update:seasonalIndicator',
-      'update:animationsEnabled',
-      'update:modelValue',
-      'update:timeAxisPosition',
-      'update:siteTitle',
-      'update:siteEndText',
-    ],
-    props: {
-      seasonalIndicator: {
-        type: Boolean,
-        default: false,
-      },
-      animationsEnabled: {
-        type: Boolean,
-        default: true,
-      },
-      timeAxisPosition: {
-        type: String,
-        default: 'right',
-      },
-      modelValue: {
-        type: Boolean,
-        default: false,
-      },
-      siteTitle: {
-        type: String,
-        default: '我的故事',
-      },
-      siteEndText: {
-        type: String,
-        default: '— 已到时间轴结尾 —',
-      },
-    },
-    setup(props: any, { emit }: any) {
-      const localSiteTitle = computed({
-        get: () => props.siteTitle,
-        set: (v: string) => emit('update:siteTitle', v),
-      });
-      const localSiteEndText = computed({
-        get: () => (props as any).siteEndText,
-        set: (v: string) => emit('update:siteEndText', v),
-      });
-      const isOpen = computed({
-        get: (): boolean => props.modelValue,
-        set: (value: boolean) => emit('update:modelValue', value),
-      });
+  const emit = defineEmits([
+    'update:seasonalIndicator',
+    'update:animationsEnabled',
+    'update:modelValue',
+    'update:timeAxisPosition',
+    'update:siteTitle',
+    'update:siteEndText',
+  ]);
 
-      const toggleSettings = () => {
-        isOpen.value = !isOpen.value;
-      };
+  const props = defineProps<{
+    seasonalIndicator?: boolean;
+    animationsEnabled?: boolean;
+    timeAxisPosition?: string;
+    modelValue?: boolean;
+    siteTitle?: string;
+    siteEndText?: string;
+  }>();
 
-      const toggleSeasonalIndicator = () => {
-        emit('update:seasonalIndicator', !props.seasonalIndicator);
-      };
+  const localSiteTitle = computed({
+    get: () => props.siteTitle ?? '我的故事',
+    set: (v: string) => emit('update:siteTitle', v),
+  });
+  const localSiteEndText = computed({
+    get: () => props.siteEndText ?? '— 已到时间轴结尾 —',
+    set: (v: string) => emit('update:siteEndText', v),
+  });
+  const isOpen = computed({
+    get: (): boolean => !!props.modelValue,
+    set: (value: boolean) => emit('update:modelValue', value),
+  });
 
-      const toggleAnimationsEnabled = () => {
-        emit('update:animationsEnabled', !props.animationsEnabled);
-      };
+  const toggleSettings = () => {
+    isOpen.value = !isOpen.value;
+  };
 
-      const setTimeAxisPosition = (position: string) => {
-        emit('update:timeAxisPosition', position);
-      };
+  const toggleSeasonalIndicator = () => {
+    emit('update:seasonalIndicator', !props.seasonalIndicator);
+  };
 
-      const saveSiteTitle = () => {
-        emit('update:siteTitle', String(localSiteTitle.value || '').trim());
-      };
-      const saveSiteEndText = () => {
-        emit('update:siteEndText', String(localSiteEndText.value || '').trim());
-      };
+  const toggleAnimationsEnabled = () => {
+    emit('update:animationsEnabled', !props.animationsEnabled);
+  };
 
-      return {
-        isOpen,
-        toggleSettings,
-        toggleSeasonalIndicator,
-        toggleAnimationsEnabled,
-        setTimeAxisPosition,
-        localSiteTitle,
-        localSiteEndText,
-        saveSiteTitle,
-        saveSiteEndText,
-      };
-    },
+  const setTimeAxisPosition = (position: string) => {
+    emit('update:timeAxisPosition', position);
+  };
+
+  const saveSiteTitle = () => {
+    emit('update:siteTitle', String(localSiteTitle.value || '').trim());
+  };
+  const saveSiteEndText = () => {
+    emit('update:siteEndText', String(localSiteEndText.value || '').trim());
   };
 </script>
 

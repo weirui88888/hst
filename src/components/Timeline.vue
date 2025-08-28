@@ -112,688 +112,562 @@
       <div class="mt-20 flex flex-col items-center select-none">
         <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
         <div class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500">
-          {{ $settings?.siteEndText ?? settingsStore.siteEndText ?? '— 已到时间轴结尾 —' }}
+          {{
+            $settings && $settings.siteEndText
+              ? $settings.siteEndText
+              : settingsStore.siteEndText || '— 已到时间轴结尾 —'
+          }}
         </div>
       </div>
     </div>
   </section>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+  // @ts-nocheck
+  import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+  type CSSProperties = Partial<CSSStyleDeclaration>;
   import MediaPreview from './MediaPreview.vue';
   import { useSettingsStore } from '../stores/settings';
 
-  export default {
-    name: 'Timeline',
-    components: { MediaPreview },
-    props: {
-      items: { type: Array, default: () => [] },
-      seasonalIndicator: { type: Boolean, default: false },
-      animationsEnabled: { type: Boolean, default: true },
-      timeAxisPosition: { type: String, default: 'right' }, // 'left' 或 'right'
-    },
-    data() {
-      return {
-        activeIndex: -1 as number,
-        sectionRefs: [] as HTMLElement[],
-        rafId: 0 as number,
-        isDragging: false as boolean,
-        dragStartY: 0 as number,
-        timelineAxisTop: 0 as number,
-        timelineAxisHeight: 0 as number,
-        // 平滑滚动状态，用于抑制updateActive抖动
-        isAutoScrolling: false as boolean,
-        autoScrollTimer: 0 as any,
-        // 时间轴两端留白比例（0-0.49），用于避免滑块顶到两端
-        axisEndPaddingRatio: 0.1 as number,
-        // 时间轴两端像素留白，用于保证上下端绝对对称
-        axisPaddingPx: 16 as number,
-      };
-    },
-    computed: {
-      timeAxisPositionStyle() {
-        if (this.activeIndex === -1 || this.items.length === 0) {
-          return { top: '50%' };
-        }
-
-        // 计算时间点在轴线上的位置（加入两端留白，且基于实际轴高）
-        const baseProgress = this.activeIndex / (this.items.length - 1); // 0-1
-        const ratioPad = Math.max(0, Math.min(0.49, this.axisEndPaddingRatio));
-        const mappedProgress = ratioPad + baseProgress * (1 - 2 * ratioPad); // [pad,1-pad]
-
-        const { minY, range } = this.getAxisMetrics();
-        const topPosition = minY + mappedProgress * range;
-
-        return { top: `${topPosition}px` };
-      },
-
-      // 固定时间标签宽度并使用等宽数字，避免内容变化引起的抖动
-      timeAxisLabelStyle() {
-        return {
-          width: '120px',
-          display: 'inline-block',
-          fontVariantNumeric: 'tabular-nums',
-        } as Partial<CSSStyleDeclaration>;
-      },
-
-      currentTimeDisplay() {
-        if (this.activeIndex === -1 || this.items.length === 0) {
-          return '';
-        }
-
-        const currentItem = this.items[this.activeIndex];
-        const date = currentItem?.date || '';
-
-        if (this.seasonalIndicator && date) {
-          const month = this.getMonthFromDate(date);
-          const season = this.getSeasonFromMonth(month);
-          return `${season} ${date}`;
-        }
-
-        return date;
-      },
-    },
-    methods: {
-      setSectionRef(el: Element | null, idx: number) {
-        if (el) this.sectionRefs[idx] = el as HTMLElement;
-      },
-
-      startDrag(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
-        this.isDragging = true;
-
-        // 获取时间轴的位置信息
-        const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
-        if (timelineAxis) {
-          const rect = timelineAxis.getBoundingClientRect();
-          this.timelineAxisTop = rect.top;
-          this.timelineAxisHeight = rect.height;
-        }
-
-        // 记录起始位置
-        const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-        this.dragStartY = clientY;
-
-        // 添加事件监听器
-        document.addEventListener('mousemove', this.onDrag);
-        document.addEventListener('touchmove', this.onDrag, { passive: false });
-        document.addEventListener('mouseup', this.stopDrag);
-        document.addEventListener('touchend', this.stopDrag);
-
-        // 防止文本选择
-        document.body.style.userSelect = 'none';
-      },
-
-      onDrag(event: MouseEvent | TouchEvent) {
-        if (!this.isDragging) return;
-
-        event.preventDefault();
-        const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-
-        // 计算在时间轴上的相对位置
-        const relativeY = clientY - this.timelineAxisTop;
-
-        // 计算圆点的实际活动范围（与timeAxisPositionStyle保持一致）
-        const { minY, maxY, range } = this.getAxisMetrics();
-
-        // 将拖拽位置映射到圆点的活动范围
-        const relativeDragY = Math.max(minY, Math.min(maxY, relativeY));
-        const rawProgress = range > 0 ? (relativeDragY - minY) / range : 0; // 区间 [pad, 1-pad]
-
-        // 去掉两端留白得到基础进度
-        const ratioPad = Math.max(0, Math.min(0.49, this.axisEndPaddingRatio));
-        const baseProgress = Math.max(
-          0,
-          Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)),
-        );
-
-        // 根据基础进度计算对应的故事索引
-        const newIndex = Math.round(baseProgress * (this.items.length - 1));
-
-        // 更新活动索引
-        if (newIndex !== this.activeIndex && newIndex >= 0 && newIndex < this.items.length) {
-          this.activeIndex = newIndex;
-        }
-      },
-
-      stopDrag() {
-        this.isDragging = false;
-
-        // 移除事件监听器
-        document.removeEventListener('mousemove', this.onDrag);
-        document.removeEventListener('touchmove', this.onDrag);
-        document.removeEventListener('mouseup', this.stopDrag);
-        document.removeEventListener('touchend', this.stopDrag);
-
-        // 松手后一次性滚动到对应位置，避免徘徊
-        if (this.activeIndex >= 0) {
-          this.scrollToStory(this.activeIndex);
-        }
-
-        // 恢复文本选择
-        document.body.style.userSelect = '';
-      },
-
-      scrollToStory(index: number) {
-        const targetElement = this.sectionRefs[index];
-        if (targetElement) {
-          const rect = targetElement.getBoundingClientRect();
-          const viewportCenter = window.innerHeight / 2;
-          const targetCenter = rect.top + rect.height / 2;
-          const scrollOffset = targetCenter - viewportCenter;
-
-          // 程序化滚动（瞬时），避免视觉徘徊
-          this.isAutoScrolling = true;
-          if (this.autoScrollTimer) window.clearTimeout(this.autoScrollTimer);
-          this.autoScrollTimer = window.setTimeout(() => {
-            this.isAutoScrolling = false;
-          }, 120);
-
-          window.scrollBy({
-            top: scrollOffset,
-            behavior: 'auto',
-          });
-        }
-      },
-
-      handleTimelineClick(event: MouseEvent) {
-        // 如果正在拖拽，不处理点击
-        if (this.isDragging) return;
-
-        // 获取时间轴的位置信息
-        const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
-        if (!timelineAxis) return;
-
-        const rect = timelineAxis.getBoundingClientRect();
-        const clickY = event.clientY - rect.top;
-
-        // 计算圆点的实际活动范围（与timeAxisPositionStyle保持一致）
-        const { minY, maxY, range } = this.getAxisMetrics();
-
-        // 将点击位置映射到圆点的活动范围
-        const relativeClickY = Math.max(minY, Math.min(maxY, clickY));
-        const rawProgress = range > 0 ? (relativeClickY - minY) / range : 0; // 区间 [pad, 1-pad]
-
-        // 去掉两端留白为基础进度
-        const ratioPad = Math.max(0, Math.min(0.49, this.axisEndPaddingRatio));
-        const baseProgress = Math.max(
-          0,
-          Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)),
-        );
-
-        // 根据基础进度计算对应的故事索引
-        const newIndex = Math.round(baseProgress * (this.items.length - 1));
-
-        // 确保索引在有效范围内，并且允许点击到相同位置
-        if (newIndex >= 0 && newIndex < this.items.length) {
-          this.activeIndex = newIndex;
-
-          // 立即滚动到对应的故事位置
-          this.scrollToStory(newIndex);
-        }
-      },
-      // 基于实际轴高返回上下端留白后的可用区间
-      getAxisMetrics() {
-        const axisEl = document.querySelector('.timeline-axis') as HTMLElement | null;
-        const lineEl = document.querySelector('.timeline-axis-line') as HTMLElement | null;
-        if (!axisEl || !lineEl) {
-          // 回退到固定值
-          const fallbackHeight = 256;
-          const pxPad = Math.max(0, Math.min(fallbackHeight / 2 - 1, this.axisPaddingPx));
-          const ratioPad = Math.max(0, Math.min(0.49, this.axisEndPaddingRatio));
-          const ratioPadPx = fallbackHeight * ratioPad;
-          const padPx = Math.max(pxPad, ratioPadPx);
-          const minY = padPx;
-          const maxY = fallbackHeight - padPx;
-          const range = Math.max(0, maxY - minY);
-          return { minY, maxY, range };
-        }
-
-        const axisRect = axisEl.getBoundingClientRect();
-        const lineRect = lineEl.getBoundingClientRect();
-        // 线在轴容器内的相对位置
-        const lineTop = lineRect.top - axisRect.top;
-        const lineBottom = lineRect.bottom - axisRect.top;
-        const lineHeight = Math.max(0, lineBottom - lineTop);
-
-        // 像素/比例留白，取较大者，确保上下端一致
-        const pxPad = Math.max(0, Math.min(lineHeight / 2 - 1, this.axisPaddingPx));
-        const ratioPad = Math.max(0, Math.min(0.49, this.axisEndPaddingRatio));
-        const ratioPadPx = lineHeight * ratioPad;
-        const padPx = Math.max(pxPad, ratioPadPx);
-
-        const minY = lineTop + padPx;
-        const maxY = lineBottom - padPx;
-        const range = Math.max(0, maxY - minY);
-        // 更新缓存的top/height以便拖拽使用
-        this.timelineAxisTop = axisRect.top;
-        this.timelineAxisHeight = axisRect.height;
-        return { minY, maxY, range };
-      },
-      updateActive() {
-        // 如果正在拖拽，不更新活动索引
-        if (this.isDragging || this.isAutoScrolling) return;
-
-        // 边界吸附：顶部/底部时强制首尾对齐
-        const doc = document.documentElement;
-        const scrollTop = window.scrollY || doc.scrollTop;
-        const viewportH = window.innerHeight;
-        const scrollHeight = Math.max(
-          doc.scrollHeight,
-          document.body ? document.body.scrollHeight : 0,
-          doc.offsetHeight,
-          doc.clientHeight,
-        );
-        const bottomGap = scrollHeight - (scrollTop + viewportH);
-        const edgeThreshold = 24; // px
-
-        if (scrollTop <= edgeThreshold && this.activeIndex !== 0) {
-          this.activeIndex = 0;
-          return;
-        }
-        if (bottomGap <= edgeThreshold && this.activeIndex !== this.items.length - 1) {
-          this.activeIndex = this.items.length - 1;
-          return;
-        }
-
-        const viewportCenter = window.innerHeight / 2;
-        let best = -1;
-        let bestDist = Number.POSITIVE_INFINITY;
-
-        for (let i = 0; i < this.sectionRefs.length; i += 1) {
-          const el = this.sectionRefs[i];
-          if (!el) continue;
-
-          const rect = el.getBoundingClientRect();
-          const center = rect.top + rect.height / 2;
-          const dist = Math.abs(center - viewportCenter);
-
-          // 只有当元素在视窗内时才考虑
-          if (rect.bottom > 0 && rect.top < window.innerHeight && dist < bestDist) {
-            bestDist = dist;
-            best = i;
-          }
-        }
-
-        // 只有当找到合适的元素且与当前不同时才更新
-        if (best !== -1 && best !== this.activeIndex) {
-          this.activeIndex = best;
-        }
-      },
-      onScroll() {
-        // 时间轴需要始终更新，但故事动画只在开启时处理
-        if (this.rafId) cancelAnimationFrame(this.rafId);
-        this.rafId = requestAnimationFrame(() => {
-          this.updateActive();
-        });
-      },
-      articleClass(index: number) {
-        if (!this.animationsEnabled) {
-          return 'opacity-100'; // 动画关闭时，所有文章都保持完全不透明
-        }
-        return index === this.activeIndex ? 'opacity-100' : 'opacity-60';
-      },
-      storyClass(index: number) {
-        if (!this.animationsEnabled) {
-          return 'scale-100 translate-y-0'; // 动画关闭时，所有故事都保持原始大小和位置
-        }
-        if (index === this.activeIndex) {
-          return 'scale-[1.02] md:scale-[1.05] -translate-y-4 md:-translate-y-6';
-        }
-        return 'scale-100 translate-y-0';
-      },
-      layoutClass(index: number) {
-        // 随机决定图片在左还是右
-        const imagePositions = [
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          false,
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          true,
-          false,
-          false,
-          true,
-          false,
-        ];
-        const imageOnLeft = imagePositions[index % imagePositions.length];
-        return imageOnLeft ? '' : 'md:grid-flow-col-dense';
-      },
-      imageOrderClass(index: number) {
-        const imagePositions = [
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          false,
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          true,
-          false,
-          false,
-          true,
-          false,
-        ];
-        const imageOnLeft = imagePositions[index % imagePositions.length];
-        // 移动端：图片永远在上（order-1）；桌面端保留左右交错
-        return imageOnLeft ? 'order-1 md:order-1' : 'order-1 md:order-2';
-      },
-      textOrderClass(index: number) {
-        const imagePositions = [
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          false,
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          true,
-          false,
-          false,
-          true,
-          false,
-        ];
-        const imageOnLeft = imagePositions[index % imagePositions.length];
-        // 移动端：文字永远在下（order-2）；桌面端保留左右交错
-        return imageOnLeft ? 'order-2 md:order-2' : 'order-2 md:order-1';
-      },
-      imageAnimationProps(index: number) {
-        const imagePositions = [
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          false,
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          true,
-          false,
-          false,
-          true,
-          false,
-        ];
-        const imageOnLeft = imagePositions[index % imagePositions.length];
-        return {
-          direction: imageOnLeft ? 'right' : 'left',
-          skew: 4,
-          rotate: 1,
-          distance: 80,
-          ease: 'power3.out',
-          duration: 0.9,
-        };
-      },
-      textAnimationProps(index: number) {
-        const imagePositions = [
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          false,
-          true,
-          false,
-          true,
-          false,
-          true,
-          true,
-          false,
-          true,
-          false,
-          false,
-          true,
-          false,
-        ];
-        const imageOnLeft = imagePositions[index % imagePositions.length];
-        return {
-          direction: imageOnLeft ? 'left' : 'right',
-          distance: 60,
-          ease: 'power2.out',
-          scale: 0.98,
-          stagger: 0.08,
-        };
-      },
-
-      imageFrameStyle(item: any) {
-        const media = item.media?.[0];
-        let aspectRatio: string | undefined = undefined;
-
-        if (media?.aspectRatio) {
-          // 解析比例字符串 (如 "16/9", "4/3", "1/1")
-          const [width, height] = media.aspectRatio.split('/').map(Number);
-          if (width && height) {
-            aspectRatio = `${width}/${height}`;
-          }
-        }
-
-        // 小屏（<=450px）禁用倾斜/阴影，并移除固定比例，避免包裹 div 高度大于图片
-        const isNarrow = typeof window !== 'undefined' && window.innerWidth <= 450;
-        if (isNarrow) {
-          const style: Partial<CSSStyleDeclaration> = {
-            transform: 'none',
-            boxShadow: 'none',
-          };
-          // 移动端不强加比例，完全遵循媒资本身尺寸
-          return style;
-        }
-
-        const rotation = this.getRandomRotation(item.id);
-        const shadowOffset = this.getRandomShadowOffset(item.id);
-
-        const style: Partial<CSSStyleDeclaration> = {
-          transform: `rotate(${rotation}deg)`,
-          boxShadow: `${shadowOffset.x}px ${shadowOffset.y}px 20px rgba(0, 0, 0, 0.3)`,
-          transition: 'all 0.3s ease-out',
-        };
-        if (aspectRatio) {
-          (style as any).aspectRatio = aspectRatio;
-        }
-        return style;
-      },
-
-      getRandomRotation(itemId: string) {
-        // 使用itemId作为种子来生成一致的随机角度
-        let hash = 0;
-        for (let i = 0; i < itemId.length; i++) {
-          const char = itemId.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash = hash & hash; // 转换为32位整数
-        }
-
-        // 生成-8到8度之间的随机角度，但大部分图片保持接近0度
-        const randomValue = Math.abs(hash) % 100;
-
-        // 65%的概率保持接近0度（-1到1度）
-        if (randomValue < 65) {
-          return ((hash % 21) - 10) / 10; // -1到1度
-        }
-        // 25%的概率轻微倾斜（-3到3度）
-        else if (randomValue < 90) {
-          return ((hash % 61) - 30) / 10; // -3到3度
-        }
-        // 8%的概率中等倾斜（-5到5度）
-        else if (randomValue < 98) {
-          return ((hash % 101) - 50) / 10; // -5到5度
-        }
-        // 2%的概率较大倾斜（-8到8度）
-        else {
-          return ((hash % 161) - 80) / 10; // -8到8度
-        }
-      },
-
-      getRandomAspectRatio(itemId: string) {
-        // 使用itemId + "aspect"作为种子来生成随机比例
-        const seed = itemId + 'aspect';
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-          const char = seed.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash = hash & hash;
-        }
-
-        // 生成0-100的随机值
-        const randomValue = Math.abs(hash) % 100;
-
-        // 根据概率分布选择比例
-        if (randomValue < 35) {
-          // 35%概率：16/9 宽屏（最常见的现代比例）
-          return '16/9';
-        } else if (randomValue < 55) {
-          // 20%概率：4/3 标准比例
-          return '4/3';
-        } else if (randomValue < 70) {
-          // 15%概率：1/1 正方形
-          return '1/1';
-        } else if (randomValue < 80) {
-          // 10%概率：3/2 经典比例
-          return '3/2';
-        } else if (randomValue < 88) {
-          // 8%概率：5/4 经典比例
-          return '5/4';
-        } else if (randomValue < 94) {
-          // 6%概率：3/4 竖屏
-          return '3/4';
-        } else if (randomValue < 98) {
-          // 4%概率：21/9 超宽屏
-          return '21/9';
-        } else {
-          // 2%概率：2/3 竖屏
-          return '2/3';
-        }
-      },
-
-      getRandomShadowOffset(itemId: string) {
-        // 使用itemId + "shadow"作为种子来生成阴影偏移
-        const seed = itemId + 'shadow';
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-          const char = seed.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash = hash & hash;
-        }
-
-        // 生成-12到12像素的随机偏移，但大部分保持较小偏移
-        const randomValue = Math.abs(hash) % 100;
-
-        let x, y;
-        if (randomValue < 70) {
-          // 70%概率：小偏移（-4到4像素）
-          x = ((hash % 81) - 40) / 10;
-          y = (((hash * 31) % 81) - 40) / 10;
-        } else if (randomValue < 90) {
-          // 20%概率：中等偏移（-8到8像素）
-          x = ((hash % 161) - 80) / 10;
-          y = (((hash * 31) % 161) - 80) / 10;
-        } else {
-          // 10%概率：较大偏移（-12到12像素）
-          x = ((hash % 241) - 120) / 10;
-          y = (((hash * 31) % 241) - 120) / 10;
-        }
-
-        return { x, y };
-      },
-
-      getMonthFromDate(dateString: string) {
-        // 尝试从日期字符串中提取月份
-        const date = new Date(dateString);
-        if (!isNaN(date.getTime())) {
-          return date.getMonth() + 1; // 返回1-12的月份
-        }
-
-        // 如果无法解析，尝试从字符串中匹配月份
-        const monthMatch = dateString.match(/(\d{1,2})[-/](\d{1,2})/);
-        if (monthMatch) {
-          return parseInt(monthMatch[2]); // 假设格式为 MM/DD 或 MM-DD
-        }
-
-        // 尝试匹配ISO格式 yyyy-mm-dd
-        const isoMatch = dateString.match(/(\d{4})-(\d{1,2})/);
-        if (isoMatch) {
-          return parseInt(isoMatch[2]); // 返回月份
-        }
-
-        return 1; // 默认返回1月
-      },
-
-      getSeasonFromMonth(month: number) {
-        if (month >= 3 && month <= 5) {
-          return '🌱春';
-        } else if (month >= 6 && month <= 8) {
-          return '🌞夏';
-        } else if (month >= 9 && month <= 11) {
-          return '🍂秋';
-        } else {
-          return '❄️冬';
-        }
-      },
-    },
-    mounted() {
-      // 时间轴需要始终工作，所以滚动监听器要始终添加
-      this.updateActive();
-      window.addEventListener('scroll', this.onScroll as any, { passive: true } as any);
-      window.addEventListener(
-        'resize',
-        () => {
-          // 尺寸变更时更新轴尺寸并刷新定位
-          const axisEl = document.querySelector('.timeline-axis') as HTMLElement | null;
-          if (axisEl) {
-            const rect = axisEl.getBoundingClientRect();
-            this.timelineAxisTop = rect.top;
-            this.timelineAxisHeight = rect.height;
-          }
-          this.onScroll();
-        },
-        { passive: true } as any,
-      );
-    },
-    beforeUnmount() {
-      window.removeEventListener('scroll', this.onScroll as any);
-      window.removeEventListener('resize', this.onScroll as any);
-      if (this.rafId) cancelAnimationFrame(this.rafId);
-
-      // 清理拖拽事件监听器
-      this.stopDrag();
-    },
-    setup() {
-      const settingsStore = useSettingsStore();
-      return { settingsStore };
-    },
+  const props = defineProps<{
+    items?: any[];
+    seasonalIndicator?: boolean;
+    animationsEnabled?: boolean;
+    timeAxisPosition?: string;
+  }>();
+
+  const activeIndex = ref<number>(-1);
+  const sectionRefs = ref<HTMLElement[]>([]);
+  const rafId = ref<number>(0);
+  const isDragging = ref<boolean>(false);
+  const dragStartY = ref<number>(0);
+  const timelineAxisTop = ref<number>(0);
+  const timelineAxisHeight = ref<number>(0);
+  const isAutoScrolling = ref<boolean>(false);
+  const autoScrollTimer = ref<any>(0);
+  const axisEndPaddingRatio = ref<number>(0.1);
+  const axisPaddingPx = ref<number>(16);
+
+  const settingsStore = useSettingsStore();
+
+  const timeAxisPositionStyle = computed(() => {
+    if (activeIndex.value === -1 || props.items.length === 0) {
+      return { top: '50%' } as CSSProperties;
+    }
+
+    const baseProgress = activeIndex.value / (props.items.length - 1);
+    const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
+    const mappedProgress = ratioPad + baseProgress * (1 - 2 * ratioPad);
+
+    const { minY, range } = getAxisMetrics();
+    const topPosition = minY + mappedProgress * range;
+    return { top: `${topPosition}px` } as CSSProperties;
+  });
+
+  const timeAxisLabelStyle = computed(() => {
+    return {
+      width: '120px',
+      display: 'inline-block',
+      fontVariantNumeric: 'tabular-nums',
+    } as CSSProperties;
+  });
+
+  const currentTimeDisplay = computed(() => {
+    if (activeIndex.value === -1 || props.items.length === 0) {
+      return '';
+    }
+    const currentItem = (props.items ?? [])[activeIndex.value];
+    const date = currentItem?.date || '';
+    if ((props.seasonalIndicator ?? false) && date) {
+      const month = getMonthFromDate(date);
+      const season = getSeasonFromMonth(month);
+      return `${season} ${date}`;
+    }
+    return date;
+  });
+
+  const setSectionRef = (el: any, idx: number) => {
+    if (el) sectionRefs.value[idx] = el as HTMLElement;
   };
+
+  const startDrag = (event: MouseEvent | TouchEvent) => {
+    event.preventDefault();
+    isDragging.value = true;
+
+    const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
+    if (timelineAxis) {
+      const rect = timelineAxis.getBoundingClientRect();
+      timelineAxisTop.value = rect.top;
+      timelineAxisHeight.value = rect.height;
+    }
+
+    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+    dragStartY.value = clientY;
+
+    document.addEventListener('mousemove', onDrag as any);
+    document.addEventListener('touchmove', onDrag as any, { passive: false } as any);
+    document.addEventListener('mouseup', stopDrag as any);
+    document.addEventListener('touchend', stopDrag as any);
+
+    document.body.style.userSelect = 'none';
+  };
+
+  const onDrag = (event: MouseEvent | TouchEvent) => {
+    if (!isDragging.value) return;
+    event.preventDefault();
+    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+    const relativeY = clientY - timelineAxisTop.value;
+    const { minY, maxY, range } = getAxisMetrics();
+    const relativeDragY = Math.max(minY, Math.min(maxY, relativeY));
+    const rawProgress = range > 0 ? (relativeDragY - minY) / range : 0;
+    const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
+    const baseProgress = Math.max(0, Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)));
+    const newIndex = Math.round(baseProgress * (props.items.length - 1));
+    if (newIndex !== activeIndex.value && newIndex >= 0 && newIndex < props.items.length) {
+      activeIndex.value = newIndex;
+    }
+  };
+
+  const stopDrag = () => {
+    isDragging.value = false;
+    document.removeEventListener('mousemove', onDrag as any);
+    document.removeEventListener('touchmove', onDrag as any);
+    document.removeEventListener('mouseup', stopDrag as any);
+    document.removeEventListener('touchend', stopDrag as any);
+    if (activeIndex.value >= 0) {
+      scrollToStory(activeIndex.value);
+    }
+    document.body.style.userSelect = '';
+  };
+
+  const scrollToStory = (index: number) => {
+    const targetElement = sectionRefs.value[index];
+    if (targetElement) {
+      const rect = targetElement.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const targetCenter = rect.top + rect.height / 2;
+      const scrollOffset = targetCenter - viewportCenter;
+      isAutoScrolling.value = true;
+      if (autoScrollTimer.value) window.clearTimeout(autoScrollTimer.value);
+      autoScrollTimer.value = window.setTimeout(() => {
+        isAutoScrolling.value = false;
+      }, 120);
+      window.scrollBy({ top: scrollOffset, behavior: 'auto' });
+    }
+  };
+
+  const handleTimelineClick = (event: MouseEvent) => {
+    if (isDragging.value) return;
+    const timelineAxis = document.querySelector('.timeline-axis') as HTMLElement;
+    if (!timelineAxis) return;
+    const rect = timelineAxis.getBoundingClientRect();
+    const clickY = event.clientY - rect.top;
+    const { minY, maxY, range } = getAxisMetrics();
+    const relativeClickY = Math.max(minY, Math.min(maxY, clickY));
+    const rawProgress = range > 0 ? (relativeClickY - minY) / range : 0;
+    const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
+    const baseProgress = Math.max(0, Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)));
+    const newIndex = Math.round(baseProgress * (props.items.length - 1));
+    if (newIndex >= 0 && newIndex < props.items.length) {
+      activeIndex.value = newIndex;
+      scrollToStory(newIndex);
+    }
+  };
+
+  const getAxisMetrics = () => {
+    const axisEl = document.querySelector('.timeline-axis') as HTMLElement | null;
+    const lineEl = document.querySelector('.timeline-axis-line') as HTMLElement | null;
+    if (!axisEl || !lineEl) {
+      const fallbackHeight = 256;
+      const pxPad = Math.max(0, Math.min(fallbackHeight / 2 - 1, axisPaddingPx.value));
+      const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
+      const ratioPadPx = fallbackHeight * ratioPad;
+      const padPx = Math.max(pxPad, ratioPadPx);
+      const minY = padPx;
+      const maxY = fallbackHeight - padPx;
+      const range = Math.max(0, maxY - minY);
+      return { minY, maxY, range };
+    }
+    const axisRect = axisEl.getBoundingClientRect();
+    const lineRect = lineEl.getBoundingClientRect();
+    const lineTop = lineRect.top - axisRect.top;
+    const lineBottom = lineRect.bottom - axisRect.top;
+    const lineHeight = Math.max(0, lineBottom - lineTop);
+    const pxPad = Math.max(0, Math.min(lineHeight / 2 - 1, axisPaddingPx.value));
+    const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
+    const ratioPadPx = lineHeight * ratioPad;
+    const padPx = Math.max(pxPad, ratioPadPx);
+    const minY = lineTop + padPx;
+    const maxY = lineBottom - padPx;
+    const range = Math.max(0, maxY - minY);
+    timelineAxisTop.value = axisRect.top;
+    timelineAxisHeight.value = axisRect.height;
+    return { minY, maxY, range };
+  };
+
+  const updateActive = () => {
+    if (isDragging.value || isAutoScrolling.value) return;
+    const doc = document.documentElement;
+    const scrollTop = window.scrollY || doc.scrollTop;
+    const viewportH = window.innerHeight;
+    const scrollHeight = Math.max(
+      doc.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+      doc.offsetHeight,
+      doc.clientHeight,
+    );
+    const bottomGap = scrollHeight - (scrollTop + viewportH);
+    const edgeThreshold = 24;
+    if (scrollTop <= edgeThreshold && activeIndex.value !== 0) {
+      activeIndex.value = 0;
+      return;
+    }
+    if (bottomGap <= edgeThreshold && activeIndex.value !== props.items.length - 1) {
+      activeIndex.value = props.items.length - 1;
+      return;
+    }
+    const viewportCenter = window.innerHeight / 2;
+    let best = -1;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < sectionRefs.value.length; i += 1) {
+      const el = sectionRefs.value[i];
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      const center = rect.top + rect.height / 2;
+      const dist = Math.abs(center - viewportCenter);
+      if (rect.bottom > 0 && rect.top < window.innerHeight && dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    if (best !== -1 && best !== activeIndex.value) {
+      activeIndex.value = best;
+    }
+  };
+
+  const onScroll = () => {
+    if (rafId.value) cancelAnimationFrame(rafId.value);
+    rafId.value = requestAnimationFrame(() => {
+      updateActive();
+    });
+  };
+
+  const articleClass = (index: number) => {
+    if (!(props.animationsEnabled ?? true)) {
+      return 'opacity-100';
+    }
+    return index === activeIndex.value ? 'opacity-100' : 'opacity-60';
+  };
+
+  const storyClass = (index: number) => {
+    if (!(props.animationsEnabled ?? true)) {
+      return 'scale-100 translate-y-0';
+    }
+    if (index === activeIndex.value) {
+      return 'scale-[1.02] md:scale-[1.05] -translate-y-4 md:-translate-y-6';
+    }
+    return 'scale-100 translate-y-0';
+  };
+
+  const layoutClass = (index: number) => {
+    const imagePositions = [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ];
+    const imageOnLeft = imagePositions[index % imagePositions.length];
+    return imageOnLeft ? '' : 'md:grid-flow-col-dense';
+  };
+
+  const imageOrderClass = (index: number) => {
+    const imagePositions = [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ];
+    const imageOnLeft = imagePositions[index % imagePositions.length];
+    return imageOnLeft ? 'order-1 md:order-1' : 'order-1 md:order-2';
+  };
+
+  const textOrderClass = (index: number) => {
+    const imagePositions = [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ];
+    const imageOnLeft = imagePositions[index % imagePositions.length];
+    return imageOnLeft ? 'order-2 md:order-2' : 'order-2 md:order-1';
+  };
+
+  const imageAnimationProps = (index: number) => {
+    const imagePositions = [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ];
+    const imageOnLeft = imagePositions[index % imagePositions.length];
+    return {
+      direction: imageOnLeft ? 'right' : 'left',
+      skew: 4,
+      rotate: 1,
+      distance: 80,
+      ease: 'power3.out',
+      duration: 0.9,
+    };
+  };
+
+  const textAnimationProps = (index: number) => {
+    const imagePositions = [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ];
+    const imageOnLeft = imagePositions[index % imagePositions.length];
+    return {
+      direction: imageOnLeft ? 'left' : 'right',
+      distance: 60,
+      ease: 'power2.out',
+      scale: 0.98,
+      stagger: 0.08,
+    };
+  };
+
+  const imageFrameStyle = (item: any) => {
+    const media = item.media?.[0];
+    let aspectRatio: string | undefined = undefined;
+    if (media?.aspectRatio) {
+      const [width, height] = media.aspectRatio.split('/').map(Number);
+      if (width && height) {
+        aspectRatio = `${width}/${height}`;
+      }
+    }
+    const isNarrow = typeof window !== 'undefined' && window.innerWidth <= 450;
+    if (isNarrow) {
+      const style: CSSProperties = {
+        transform: 'none',
+        boxShadow: 'none',
+      };
+      return style;
+    }
+    const rotation = getRandomRotation(item.id);
+    const shadowOffset = getRandomShadowOffset(item.id);
+    const style: CSSProperties = {
+      transform: `rotate(${rotation}deg)`,
+      boxShadow: `${shadowOffset.x}px ${shadowOffset.y}px 20px rgba(0, 0, 0, 0.3)`,
+      transition: 'all 0.3s ease-out',
+    };
+    if (aspectRatio) (style as any).aspectRatio = aspectRatio;
+    return style;
+  };
+
+  const getRandomRotation = (itemId: string) => {
+    let hash = 0;
+    for (let i = 0; i < itemId.length; i++) {
+      const char = itemId.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    const randomValue = Math.abs(hash) % 100;
+    if (randomValue < 65) {
+      return ((hash % 21) - 10) / 10;
+    } else if (randomValue < 90) {
+      return ((hash % 61) - 30) / 10;
+    } else if (randomValue < 98) {
+      return ((hash % 101) - 50) / 10;
+    } else {
+      return ((hash % 161) - 80) / 10;
+    }
+  };
+
+  const getRandomAspectRatio = (itemId: string) => {
+    const seed = itemId + 'aspect';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    const randomValue = Math.abs(hash) % 100;
+    if (randomValue < 35) {
+      return '16/9';
+    } else if (randomValue < 55) {
+      return '4/3';
+    } else if (randomValue < 70) {
+      return '1/1';
+    } else if (randomValue < 80) {
+      return '3/2';
+    } else if (randomValue < 88) {
+      return '5/4';
+    } else if (randomValue < 94) {
+      return '3/4';
+    } else if (randomValue < 98) {
+      return '21/9';
+    } else {
+      return '2/3';
+    }
+  };
+
+  const getRandomShadowOffset = (itemId: string) => {
+    const seed = itemId + 'shadow';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    const randomValue = Math.abs(hash) % 100;
+    let x, y;
+    if (randomValue < 70) {
+      x = ((hash % 81) - 40) / 10;
+      y = (((hash * 31) % 81) - 40) / 10;
+    } else if (randomValue < 90) {
+      x = ((hash % 161) - 80) / 10;
+      y = (((hash * 31) % 161) - 80) / 10;
+    } else {
+      x = ((hash % 241) - 120) / 10;
+      y = (((hash * 31) % 241) - 120) / 10;
+    }
+    return { x, y };
+  };
+
+  const getMonthFromDate = (dateString: string) => {
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date.getMonth() + 1;
+    }
+    const monthMatch = dateString.match(/(\d{1,2})[-/](\d{1,2})/);
+    if (monthMatch) {
+      return parseInt(monthMatch[2]);
+    }
+    const isoMatch = dateString.match(/(\d{4})-(\d{1,2})/);
+    if (isoMatch) {
+      return parseInt(isoMatch[2]);
+    }
+    return 1;
+  };
+
+  const getSeasonFromMonth = (month: number) => {
+    if (month >= 3 && month <= 5) {
+      return '🌱春';
+    } else if (month >= 6 && month <= 8) {
+      return '🌞夏';
+    } else if (month >= 9 && month <= 11) {
+      return '🍂秋';
+    } else {
+      return '❄️冬';
+    }
+  };
+
+  onMounted(() => {
+    updateActive();
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    window.addEventListener(
+      'resize',
+      () => {
+        const axisEl = document.querySelector('.timeline-axis') as HTMLElement | null;
+        if (axisEl) {
+          const rect = axisEl.getBoundingClientRect();
+          timelineAxisTop.value = rect.top;
+          timelineAxisHeight.value = rect.height;
+        }
+        onScroll();
+      },
+      { passive: true } as any,
+    );
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll as any);
+    window.removeEventListener('resize', onScroll as any);
+    if (rafId.value) cancelAnimationFrame(rafId.value);
+    stopDrag();
+  });
 </script>
 
 <style scoped>

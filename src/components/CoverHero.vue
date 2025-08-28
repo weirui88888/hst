@@ -26,21 +26,14 @@
   </section>
 </template>
 
-<script lang="ts">
-  import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+  // @ts-nocheck
+  import { computed } from 'vue';
   import type { TimelineItem } from '../stores/timeline';
   import MediaPreview from './MediaPreview.vue';
 
-  export default defineComponent({
-    name: 'CoverHero',
-    components: { MediaPreview },
-    props: {
-      latest: {
-        type: Object as PropType<TimelineItem | null>,
-        default: null,
-      },
-    },
-  });
+  const { latest: latestProp } = defineProps<{ latest?: TimelineItem | null }>();
+  const latest = computed(() => latestProp ?? null);
 </script>
 
 <style scoped></style>

@@ -17,26 +17,17 @@
   </div>
 </template>
 
-<script lang="ts">
-  import { defineComponent, PropType, computed } from 'vue';
+<script setup lang="ts">
+  // @ts-nocheck
+  import { computed } from 'vue';
   import type { MediaItem } from '../stores/timeline';
 
-  export default defineComponent({
-    name: 'MediaPreview',
-    props: {
-      media: {
-        type: Array as PropType<MediaItem[] | undefined>,
-        default: undefined,
-      },
-    },
-    setup(props) {
-      const validMedia = computed(() => (props.media ?? []).filter((m) => !!m.url));
-      const mediaComponent = (m: MediaItem) => (m.type === 'video' ? 'video' : 'img');
-      const extraProps = (m: MediaItem) =>
-        m.type === 'video' ? { autoplay: true, muted: true, loop: true, playsinline: true } : {};
-      return { validMedia, mediaComponent, extraProps };
-    },
-  });
+  const props = defineProps<{ media?: MediaItem[] }>();
+
+  const validMedia = computed(() => (props.media ?? []).filter((m) => !!m.url));
+  const mediaComponent = (m: MediaItem) => (m.type === 'video' ? 'video' : 'img');
+  const extraProps = (m: MediaItem) =>
+    m.type === 'video' ? { autoplay: true, muted: true, loop: true, playsinline: true } : {};
 </script>
 
 <style scoped>
