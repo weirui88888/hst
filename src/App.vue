@@ -11,6 +11,7 @@
       />
     </main>
     <BackToTop />
+    <Toast />
   </div>
 </template>
 
@@ -19,6 +20,7 @@
   import CoverHero from './components/CoverHero.vue';
   import Timeline from './components/Timeline.vue';
   import BackToTop from './components/BackToTop.vue';
+  import Toast from './components/Toast.vue';
   import { useTimelineStore } from './stores/timeline';
   import { useEffectsStore } from './stores/effects';
   import { useSettingsStore } from './stores/settings';
@@ -31,12 +33,6 @@
 </script>
 
 <style>
-  /* 站点主色（保留供其他组件使用；不再定制 V-Calendar） */
-  :root {
-    --site-main-color: #ea580c;
-    --site-main-color-30: rgba(245, 158, 11, 0.3);
-  }
-
   /* .vc-container .vc-weekday-1, .vc-container .vc-weekday-7  {
   color: red;
 }
