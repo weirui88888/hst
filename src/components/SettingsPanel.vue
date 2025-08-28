@@ -39,7 +39,7 @@
           </div>
           <button
             @click="toggleSettings"
-            class="text-neutral-400 hover:text-neutral-200 dark:text-neutral-500 dark:hover:text-neutral-800 transition-all duration-200 bg-none border-none"
+            class="text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 transition-all duration-200 bg-none border-none"
             style="background: none; border: none"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

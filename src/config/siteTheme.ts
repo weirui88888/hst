@@ -1,4 +1,4 @@
-export const SITE_MAIN_COLOR = '#f59e0b';
+export const SITE_MAIN_COLOR = '#ea580c';
 
 function hexToRgba(hex: string, alpha: number): string {
   const normalized = hex.replace('#', '');
