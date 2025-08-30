@@ -93,6 +93,13 @@ export const UI_TEXTS = {
   toast: {
     saveSuccess: '保存成功',
   },
+
+  // 故事延续文案
+  storyContinuation: {
+    title: '我们的故事不止于此',
+    subtitle:
+      '每一个瞬间都是珍贵的回忆，每一张照片都承载着美好的时光。让我们继续书写属于我们的精彩故事。',
+  },
 } as const;
 
 // 导出类型定义

@@ -12,6 +12,25 @@
     </main>
     <!-- 全宽横向滚动组件（直接使用组件内置的全宽贴边功能） -->
     <ImageMarquee :height="180" :gap="6" :speed="100" :hoverPause="true" :fullBleed="true" />
+
+    <!-- 故事延续文字区域 -->
+    <section
+      class="py-16 text-center story-section"
+      :class="{ visible: isVisible }"
+      ref="storySection"
+    >
+      <div class="max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
+        <h2
+          class="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-neutral-200 mb-4 typewriter-text"
+        >
+          {{ UI_TEXTS.storyContinuation.title }}
+        </h2>
+        <p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed fade-in-text">
+          {{ UI_TEXTS.storyContinuation.subtitle }}
+        </p>
+      </div>
+    </section>
+
     <BackToTop />
     <Toast />
     <MusicPlayer />
@@ -20,6 +39,7 @@
 
 <script setup lang="ts">
   // @ts-nocheck
+  import { ref, onMounted, onUnmounted } from 'vue';
   import NavBar from './components/NavBar.vue';
   import CoverHero from './components/CoverHero.vue';
   import Timeline from './components/Timeline.vue';
@@ -30,12 +50,46 @@
   import { useTimelineStore } from './stores/timeline';
   import { useEffectsStore } from './stores/effects';
   import { useSettingsStore } from './stores/settings';
+  import { UI_TEXTS } from './config/texts';
 
   const timelineStore = useTimelineStore();
   const effects = useEffectsStore();
   const settings = useSettingsStore();
   const items = timelineStore.sortedItems;
   const latestItem = items[0] ?? null;
+
+  // 滚动触发动画相关
+  const storySection = ref<HTMLElement>();
+  const isVisible = ref(false);
+  let observer: IntersectionObserver | null = null;
+
+  onMounted(() => {
+    if (storySection.value) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              isVisible.value = true;
+              // 一旦触发就停止观察，避免重复触发
+              observer?.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.3, // 当30%的元素可见时触发
+          rootMargin: '0px 0px -50px 0px', // 提前50px触发
+        },
+      );
+
+      observer.observe(storySection.value);
+    }
+  });
+
+  onUnmounted(() => {
+    if (observer) {
+      observer.disconnect();
+    }
+  });
 </script>
 
 <style>
@@ -67,4 +121,72 @@
  .vc-nav-popover-container.vc-dark button.is-active{
   background-color: var(--site-main-color);
  } */
+
+  /* 故事延续文字动画样式 */
+  .story-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition:
+      opacity 1s ease-out,
+      transform 1s ease-out;
+  }
+
+  .story-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .typewriter-text {
+    opacity: 0;
+    transform: scale(2);
+    transition:
+      opacity 1.5s ease-out 1s,
+      transform 1.5s ease-out 1s;
+  }
+
+  .story-section.visible .typewriter-text {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .fade-in-text {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 1s ease-out 0.5s,
+      transform 1s ease-out 0.5s;
+  }
+
+  .story-section.visible .fade-in-text {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 暗黑主题适配 */
+  .dark .typewriter-text {
+    color: #f8fafc;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .typewriter-text {
+      font-size: 1.875rem;
+    }
+  }
+
+  /* 减少动画偏好设置 */
+  @media (prefers-reduced-motion: reduce) {
+    .story-section,
+    .typewriter-text,
+    .fade-in-text {
+      transition: none;
+      opacity: 1;
+      transform: none;
+      max-width: 100%;
+    }
+
+    .typewriter-text::after {
+      display: none;
+    }
+  }
 </style>
