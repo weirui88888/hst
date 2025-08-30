@@ -3,7 +3,7 @@
     <!-- 时间轴线 -->
     <div
       class="fixed top-1/2 -translate-y-1/2 z-50 hidden md:block transition-all duration-300"
-      :class="timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
+      :class="props.timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
     >
       <div class="relative timeline-axis">
         <!-- 时间轴竖线 -->
@@ -25,7 +25,7 @@
         <div
           class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-200 timeline-time"
           :class="[
-            timeAxisPosition === 'left' ? 'left-6 text-right' : 'right-6 text-left',
+            props.timeAxisPosition === 'left' ? 'left-6 text-right' : 'right-6 text-left',
             isDragging || isAutoScrolling ? 'duration-0' : '',
           ]"
           :style="[timeAxisPositionStyle, timeAxisLabelStyle]"
@@ -37,17 +37,17 @@
 
     <div class="space-y-16">
       <article
-        v-for="(item, index) in items"
-        :key="`${item.id}-${animationsEnabled}`"
+        v-for="(item, index) in props.items || []"
+        :key="`${item.id}-${props.animationsEnabled}`"
         :ref="(el) => setSectionRef(el, index)"
         class="relative will-change-transform"
-        :class="[animationsEnabled ? 'transition-all duration-500' : '', articleClass(index)]"
+        :class="[props.animationsEnabled ? 'transition-all duration-500' : '', articleClass(index)]"
       >
         <!-- 故事内容 -->
         <div
           class="relative max-w-4xl mx-auto"
           :class="[
-            animationsEnabled ? 'transition-all duration-700 ease-out' : '',
+            props.animationsEnabled ? 'transition-all duration-700 ease-out' : '',
             storyClass(index),
           ]"
         >
@@ -66,9 +66,7 @@
                   :style="imageFrameStyle(item)"
                   class="timeline-image w-full rounded-xl overflow-hidden"
                   :class="[
-                    animationsEnabled
-                      ? 'transition-all duration-300 md:hover:scale-[1.02] animations-enabled'
-                      : '',
+                    props.animationsEnabled ? 'transition-all duration-300 animations-enabled' : '',
                   ]"
                 >
                   <MediaPreview :media="item.media" />
@@ -112,11 +110,7 @@
       <div class="mt-20 flex flex-col items-center select-none">
         <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
         <div class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500">
-          {{
-            $settings && $settings.siteEndText
-              ? $settings.siteEndText
-              : settingsStore.siteEndText || '— 已到时间轴结尾 —'
-          }}
+          {{ settingsStore.siteEndText || UI_TEXTS.settings.endText.default }}
         </div>
       </div>
     </div>
@@ -129,6 +123,7 @@
   type CSSProperties = Partial<CSSStyleDeclaration>;
   import MediaPreview from './MediaPreview.vue';
   import { useSettingsStore } from '../stores/settings';
+  import { UI_TEXTS } from '../config/texts';
 
   const props = defineProps<{
     items?: any[];
@@ -152,7 +147,7 @@
   const settingsStore = useSettingsStore();
 
   const timeAxisPositionStyle = computed(() => {
-    if (activeIndex.value === -1 || props.items.length === 0) {
+    if (activeIndex.value === -1 || !props.items || props.items.length === 0) {
       return { top: '50%' } as CSSProperties;
     }
 
@@ -174,10 +169,10 @@
   });
 
   const currentTimeDisplay = computed(() => {
-    if (activeIndex.value === -1 || props.items.length === 0) {
+    if (activeIndex.value === -1 || !props.items || props.items.length === 0) {
       return '';
     }
-    const currentItem = (props.items ?? [])[activeIndex.value];
+    const currentItem = props.items[activeIndex.value];
     const date = currentItem?.date || '';
     if ((props.seasonalIndicator ?? false) && date) {
       const month = getMonthFromDate(date);
@@ -223,8 +218,8 @@
     const rawProgress = range > 0 ? (relativeDragY - minY) / range : 0;
     const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
     const baseProgress = Math.max(0, Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)));
-    const newIndex = Math.round(baseProgress * (props.items.length - 1));
-    if (newIndex !== activeIndex.value && newIndex >= 0 && newIndex < props.items.length) {
+    const newIndex = Math.round(baseProgress * ((props.items?.length || 0) - 1));
+    if (newIndex !== activeIndex.value && newIndex >= 0 && newIndex < (props.items?.length || 0)) {
       activeIndex.value = newIndex;
     }
   };
@@ -268,8 +263,8 @@
     const rawProgress = range > 0 ? (relativeClickY - minY) / range : 0;
     const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
     const baseProgress = Math.max(0, Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)));
-    const newIndex = Math.round(baseProgress * (props.items.length - 1));
-    if (newIndex >= 0 && newIndex < props.items.length) {
+    const newIndex = Math.round(baseProgress * ((props.items?.length || 0) - 1));
+    if (newIndex >= 0 && newIndex < (props.items?.length || 0)) {
       activeIndex.value = newIndex;
       scrollToStory(newIndex);
     }
@@ -323,8 +318,8 @@
       activeIndex.value = 0;
       return;
     }
-    if (bottomGap <= edgeThreshold && activeIndex.value !== props.items.length - 1) {
-      activeIndex.value = props.items.length - 1;
+    if (bottomGap <= edgeThreshold && activeIndex.value !== (props.items?.length || 0) - 1) {
+      activeIndex.value = (props.items?.length || 0) - 1;
       return;
     }
     const viewportCenter = window.innerHeight / 2;
@@ -538,10 +533,11 @@
     const rotation = getRandomRotation(item.id);
     const shadowOffset = getRandomShadowOffset(item.id);
     const style: CSSProperties = {
-      transform: `rotate(${rotation}deg)`,
       boxShadow: `${shadowOffset.x}px ${shadowOffset.y}px 20px rgba(0, 0, 0, 0.3)`,
       transition: 'all 0.3s ease-out',
     };
+    // 使用 CSS 变量承载角度，悬停放大时保持原角度
+    (style as any)['--rotation'] = `${rotation}deg`;
     if (aspectRatio) (style as any).aspectRatio = aspectRatio;
     return style;
   };
@@ -674,12 +670,14 @@
   /* 图片倾斜效果增强 */
   .timeline-image {
     transform-origin: center center;
+    /* 默认状态保持原角度 */
+    transform: rotate(var(--rotation, 0deg));
     backface-visibility: hidden;
   }
 
   /* 悬停时的动画效果 - 只在动画开启时生效 */
   .timeline-image.animations-enabled:hover {
-    transform: scale(1.03) rotate(var(--rotation, 0deg)) !important;
+    transform: scale(1.06) rotate(var(--rotation, 0deg)) !important;
     box-shadow: var(--shadow-x, 0px) var(--shadow-y, 0px) 15px rgba(0, 0, 0, 0.3) !important;
     z-index: 10;
   }

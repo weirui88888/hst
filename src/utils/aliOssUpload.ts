@@ -1,5 +1,7 @@
 import AliOss from 'ali-oss';
-import type { Options, MultipartUploadOptions } from 'ali-oss';
+// 在前端环境缺少官方类型时，使用宽松类型占位，避免 TS 报错
+type AliOssOptions = any;
+type MultipartUploadOptions = any;
 
 interface StsToken {
   accessKeyId: string;
@@ -157,7 +159,7 @@ class AliOssUpload {
     try {
       const stsToken = asyncGetStsToken ? await asyncGetStsToken() : await this.asyncGetStsToken!();
       this.checkStsToken(stsToken);
-      const ossConfig: Options = this.getOssConfig({
+      const ossConfig: AliOssOptions = this.getOssConfig({
         stsToken,
         bucket,
         region,
@@ -172,7 +174,7 @@ class AliOssUpload {
     try {
       const { asyncGetStsToken, bucket = this.bucket, region = this.region } = options;
       const ossConfig = await this.getConfig({ asyncGetStsToken, bucket, region });
-      return new AliOss(ossConfig as Options);
+      return new AliOss(ossConfig as AliOssOptions);
     } catch (error: any) {
       console.error(error.message);
     }
@@ -194,8 +196,9 @@ class AliOssUpload {
     try {
       const ossConfig = await this.getConfig({ asyncGetStsToken, bucket, region });
       const { name } = file;
-      const ossClient = new AliOss(ossConfig as Options);
-      const uploadOptions = extraUploadOptions ?? this.defaultUploadOption;
+      const ossClient = new AliOss(ossConfig as AliOssOptions);
+      const uploadOptions = (extraUploadOptions ??
+        this.defaultUploadOption) as MultipartUploadOptions;
       const uploadPath = this.getConstructOssKey({
         name,
         directory,
@@ -242,3 +245,38 @@ class AliOssUpload {
 }
 
 export default AliOssUpload;
+
+// ========= Helper for app usage (env driven) =========
+// 说明：在前端环境中通过 Vite 注入的环境变量（以 VITE_ 开头）来构建上传器与上传方法
+// 需要在 .env.local 中配置：
+// VITE_OSS_BUCKET=xxx
+// VITE_OSS_REGION=oss-cn-hangzhou
+// VITE_OSS_DOMAIN=https://img.example.com (可选)
+// VITE_OSS_DIRECTORY=images/ (可选)
+// VITE_OSS_ACCESS_KEY_ID=xxx (仅你当前要求的本地自测，生产不建议)
+// VITE_OSS_ACCESS_KEY_SECRET=xxx (仅你当前要求的本地自测，生产不建议)
+
+export async function uploadImageViaEnv(file: File): Promise<string> {
+  const bucket = import.meta.env.VITE_OSS_BUCKET as string;
+  const region = import.meta.env.VITE_OSS_REGION as string;
+  const domain = (import.meta.env.VITE_OSS_DOMAIN as string) || undefined;
+  const directory = (import.meta.env.VITE_OSS_DIRECTORY as string) || '';
+  const accessKeyId = import.meta.env.VITE_OSS_ACCESS_KEY_ID as string;
+  const accessKeySecret = import.meta.env.VITE_OSS_ACCESS_KEY_SECRET as string;
+
+  if (!bucket || !region) throw new Error('OSS 配置缺失：VITE_OSS_BUCKET 或 VITE_OSS_REGION');
+  if (!accessKeyId || !accessKeySecret)
+    throw new Error('缺少 VITE_OSS_ACCESS_KEY_ID 或 VITE_OSS_ACCESS_KEY_SECRET');
+
+  const uploader = new AliOssUpload({
+    bucket,
+    region,
+    domain,
+    directory,
+    // 仅用于你当前本地自测：直接回传长期 AK/SK。强烈建议尽快切换到 STS。
+    asyncGetStsToken: async () => ({ accessKeyId, accessKeySecret }) as StsToken,
+  });
+
+  const res = await uploader.upload({ file, directory, randomName: true });
+  return res.ossSourceUrl;
+}

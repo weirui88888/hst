@@ -32,7 +32,7 @@ function getFrom(
 }
 
 export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> = {
-  async mounted(el) {
+  async mounted(el, binding) {
     const effects = useEffectsStore();
     const value = binding.value;
     const options: GsapOptions = typeof value === 'string' ? { direction: value } : value || {};
@@ -128,7 +128,7 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
       el.style.transform = transformParts.join(' ');
 
       const io = new (window as any).IntersectionObserver(
-        (entries) => {
+        (entries: any[]) => {
           for (const entry of entries) {
             if (entry.isIntersecting) {
               el.style.opacity = '1';
@@ -145,7 +145,7 @@ export const vGsap: Directive<HTMLElement, Direction | GsapOptions | undefined> 
   },
 
   // 添加更新钩子，当动画状态改变时重新处理
-  updated(el) {
+  updated(el, binding) {
     const effects = useEffectsStore();
 
     // 如果动画被关闭，清理所有动画效果

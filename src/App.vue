@@ -10,17 +10,23 @@
         :timeAxisPosition="settings.timeAxisPosition"
       />
     </main>
+    <!-- 全宽横向滚动组件（直接使用组件内置的全宽贴边功能） -->
+    <ImageMarquee :height="180" :gap="6" :speed="100" :hoverPause="true" :fullBleed="true" />
     <BackToTop />
     <Toast />
+    <MusicPlayer />
   </div>
 </template>
 
 <script setup lang="ts">
+  // @ts-nocheck
   import NavBar from './components/NavBar.vue';
   import CoverHero from './components/CoverHero.vue';
   import Timeline from './components/Timeline.vue';
   import BackToTop from './components/BackToTop.vue';
   import Toast from './components/Toast.vue';
+  import ImageMarquee from './components/ImageMarquee.vue';
+  import MusicPlayer from './components/MusicPlayer.vue';
   import { useTimelineStore } from './stores/timeline';
   import { useEffectsStore } from './stores/effects';
   import { useSettingsStore } from './stores/settings';

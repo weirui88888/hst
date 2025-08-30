@@ -35,7 +35,9 @@
                 />
               </svg>
             </div>
-            <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-200">设置</h2>
+            <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-200">
+              {{ UI_TEXTS.settings.title }}
+            </h2>
           </div>
           <button
             @click="toggleSettings"
@@ -57,7 +59,9 @@
         <div class="space-y-6">
           <!-- 页面设置 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">页面设置</h3>
+            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
+              {{ UI_TEXTS.settings.pageSettings }}
+            </h3>
 
             <!-- 动画开关 -->
             <div
@@ -66,10 +70,10 @@
               <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                    页面动画
+                    {{ UI_TEXTS.settings.pageAnimation.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                    开启或关闭页面过渡动画效果
+                    {{ UI_TEXTS.settings.pageAnimation.description }}
                   </p>
                 </div>
                 <!-- 圆形checkbox开关 -->
@@ -107,7 +111,11 @@
                   </button>
                   <!-- 状态指示文字 -->
                   <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                    {{ animationsEnabled ? '开启' : '关闭' }}
+                    {{
+                      animationsEnabled
+                        ? UI_TEXTS.settings.pageAnimation.on
+                        : UI_TEXTS.settings.pageAnimation.off
+                    }}
                   </span>
                 </div>
               </div>
@@ -119,15 +127,17 @@
             >
               <div>
                 <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                  站点标题
+                  {{ UI_TEXTS.settings.siteTitle.title }}
                 </h4>
-                <p class="text-xs text-neutral-600 dark:text-neutral-300">修改页面左上角主标题</p>
+                <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                  {{ UI_TEXTS.settings.siteTitle.description }}
+                </p>
               </div>
               <div class="mt-3 flex items-center gap-2">
                 <input
                   v-model="localSiteTitle"
                   type="text"
-                  placeholder="我的故事"
+                  :placeholder="UI_TEXTS.settings.siteTitle.placeholder"
                   class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                 />
                 <button
@@ -136,7 +146,7 @@
                   style="border: none"
                   @click="saveSiteTitle"
                 >
-                  保存
+                  {{ UI_TEXTS.settings.save }}
                 </button>
               </div>
             </div>
@@ -147,17 +157,17 @@
             >
               <div>
                 <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                  结尾文案
+                  {{ UI_TEXTS.settings.endText.title }}
                 </h4>
                 <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                  设置时间轴底部的结尾提示文案
+                  {{ UI_TEXTS.settings.endText.description }}
                 </p>
               </div>
               <div class="mt-3 flex items-center gap-2">
                 <input
                   v-model="localSiteEndText"
                   type="text"
-                  placeholder="— 已到时间轴结尾 —"
+                  :placeholder="UI_TEXTS.settings.endText.placeholder"
                   class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                 />
                 <button
@@ -166,15 +176,79 @@
                   style="border: none"
                   @click="saveSiteEndText"
                 >
-                  保存
+                  {{ UI_TEXTS.settings.save }}
                 </button>
+              </div>
+            </div>
+
+            <!-- 音乐自动播放设置 -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                    {{ UI_TEXTS.settings.musicAutoPlay.title }}
+                  </h4>
+                  <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                    {{ UI_TEXTS.settings.musicAutoPlay.description }}
+                  </p>
+                  <!-- 提示信息 -->
+                  <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 italic">
+                    {{ UI_TEXTS.settings.musicAutoPlay.tip }}
+                  </p>
+                </div>
+                <!-- 圆形checkbox开关 -->
+                <div class="flex items-center">
+                  <button
+                    @click="toggleMusicAutoPlay"
+                    class="relative w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none overflow-hidden border-none"
+                    :style="
+                      musicAutoPlay
+                        ? {
+                            backgroundColor: 'var(--site-main-color)',
+                            boxShadow: `0 0 0 4px var(--site-main-color-30)`,
+                          }
+                        : {}
+                    "
+                    :class="
+                      !musicAutoPlay
+                        ? 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        : ''
+                    "
+                  >
+                    <!-- 选中状态的对勾图标 -->
+                    <svg
+                      v-if="musicAutoPlay"
+                      class="w-3 h-3 text-white transition-all duration-200 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <!-- 状态指示文字 -->
+                  <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                    {{
+                      musicAutoPlay
+                        ? UI_TEXTS.settings.musicAutoPlay.on
+                        : UI_TEXTS.settings.musicAutoPlay.off
+                    }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 时间轴设置 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">时间轴设置</h3>
+            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
+              {{ UI_TEXTS.settings.timelineSettings }}
+            </h3>
 
             <!-- 时间轴位置开关 -->
             <div
@@ -183,10 +257,14 @@
               <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                    时间轴位置
+                    {{ UI_TEXTS.settings.timelinePosition.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                    {{ timeAxisPosition === 'left' ? '显示在左侧' : '显示在右侧' }}
+                    {{
+                      timeAxisPosition === 'left'
+                        ? UI_TEXTS.settings.timelinePosition.leftDesc
+                        : UI_TEXTS.settings.timelinePosition.rightDesc
+                    }}
                   </p>
                 </div>
                 <!-- 自定义开关 -->
@@ -203,7 +281,11 @@
                   </button>
                   <!-- 状态指示文字 -->
                   <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                    {{ timeAxisPosition === 'right' ? '右侧' : '左侧' }}
+                    {{
+                      timeAxisPosition === 'right'
+                        ? UI_TEXTS.settings.timelinePosition.right
+                        : UI_TEXTS.settings.timelinePosition.left
+                    }}
                   </span>
                 </div>
               </div>
@@ -216,10 +298,10 @@
               <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
-                    季节标识
+                    {{ UI_TEXTS.settings.seasonalIndicator.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                    在时间轴上显示春夏秋冬标识
+                    {{ UI_TEXTS.settings.seasonalIndicator.description }}
                   </p>
                 </div>
                 <!-- 圆形checkbox开关 -->
@@ -257,7 +339,11 @@
                   </button>
                   <!-- 状态指示文字 -->
                   <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
-                    {{ seasonalIndicator ? '开启' : '关闭' }}
+                    {{
+                      seasonalIndicator
+                        ? UI_TEXTS.settings.pageAnimation.on
+                        : UI_TEXTS.settings.pageAnimation.off
+                    }}
                   </span>
                 </div>
               </div>
@@ -266,12 +352,14 @@
 
           <!-- 其他设置区域（预留） -->
           <div class="space-y-4">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">其他设置</h3>
+            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
+              {{ UI_TEXTS.settings.otherSettings }}
+            </h3>
             <div
               class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
             >
               <p class="text-sm text-neutral-600 dark:text-neutral-300">
-                更多设置选项将在这里添加...
+                {{ UI_TEXTS.settings.moreSettings }}
               </p>
             </div>
           </div>
@@ -291,6 +379,7 @@
 <script setup lang="ts">
   // @ts-nocheck
   import { computed } from 'vue';
+  import { UI_TEXTS } from '../config/texts';
 
   const emit = defineEmits([
     'update:seasonalIndicator',
@@ -299,6 +388,7 @@
     'update:timeAxisPosition',
     'update:siteTitle',
     'update:siteEndText',
+    'update:musicAutoPlay',
   ]);
 
   const props = defineProps<{
@@ -308,6 +398,7 @@
     modelValue?: boolean;
     siteTitle?: string;
     siteEndText?: string;
+    musicAutoPlay?: boolean;
   }>();
 
   const localSiteTitle = computed({
@@ -317,6 +408,11 @@
   const localSiteEndText = computed({
     get: () => props.siteEndText ?? '— 已到时间轴结尾 —',
     set: (v: string) => emit('update:siteEndText', v),
+  });
+
+  const musicAutoPlay = computed({
+    get: () => props.musicAutoPlay ?? true,
+    set: (v: boolean) => emit('update:musicAutoPlay', v),
   });
   const isOpen = computed({
     get: (): boolean => !!props.modelValue,
@@ -333,6 +429,10 @@
 
   const toggleAnimationsEnabled = () => {
     emit('update:animationsEnabled', !props.animationsEnabled);
+  };
+
+  const toggleMusicAutoPlay = () => {
+    emit('update:musicAutoPlay', !props.musicAutoPlay);
   };
 
   const setTimeAxisPosition = (position: string) => {

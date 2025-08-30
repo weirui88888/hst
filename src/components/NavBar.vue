@@ -5,7 +5,7 @@
     >
       <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
         <h1 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
-          {{ settings.siteTitle || '我的故事' }}
+          {{ settings.siteTitle || UI_TEXTS.nav.defaultTitle }}
         </h1>
         <div class="flex items-center gap-3">
           <button
@@ -39,7 +39,7 @@
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
             @click="openForm"
-            title="录入"
+            :title="UI_TEXTS.nav.add"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -53,7 +53,7 @@
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
             @click="openSettings"
-            title="设置"
+            :title="UI_TEXTS.nav.settings"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -81,11 +81,13 @@
       :timeAxisPosition="settings.timeAxisPosition"
       :siteTitle="settings.siteTitle"
       :siteEndText="settings.siteEndText"
+      :musicAutoPlay="settings.musicAutoPlay"
       @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
       @update:timeAxisPosition="settings.setTimeAxisPosition"
       @update:siteTitle="settings.setSiteTitle"
       @update:siteEndText="settings.setSiteEndText"
+      @update:musicAutoPlay="settings.setMusicAutoPlay"
     />
   </div>
 </template>
@@ -97,6 +99,7 @@
   import { useSettingsStore } from '../stores/settings';
   import UploadDialog from './UploadDialog.vue';
   import SettingsPanel from './SettingsPanel.vue';
+  import { UI_TEXTS } from '../config/texts';
 
   const settings = useSettingsStore();
 
@@ -104,7 +107,7 @@
   const title = computed(() => (theme.mode === 'dark' ? '切换到浅色' : '切换到深色'));
   const toggle = () => theme.toggleTheme();
 
-  const isOpen = ref(true);
+  const isOpen = ref(false);
   const openForm = () => (isOpen.value = true);
 
   const effects = useEffectsStore();

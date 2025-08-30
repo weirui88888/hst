@@ -3,3 +3,4 @@ dist
 draft.html
 TODO.md
 private
+.env.local

@@ -22,7 +22,7 @@
         </div>
       </div>
     </div>
-    <div v-else class="text-center text-neutral-500">还没有内容，点击右上角“录入”开始记录吧。</div>
+    <div v-else class="text-center text-neutral-500">{{ UI_TEXTS.empty.noContent }}</div>
   </section>
 </template>
 
@@ -31,6 +31,7 @@
   import { computed } from 'vue';
   import type { TimelineItem } from '../stores/timeline';
   import MediaPreview from './MediaPreview.vue';
+  import { UI_TEXTS } from '../config/texts';
 
   const { latest: latestProp } = defineProps<{ latest?: TimelineItem | null }>();
   const latest = computed(() => latestProp ?? null);
