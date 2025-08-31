@@ -1,13 +1,14 @@
 <template>
   <div>
     <header
-      class="sticky top-0 z-50 backdrop-blur bg-white/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800"
+      class="sticky top-0 z-50 backdrop-blur dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800"
     >
       <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
         <h1 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
           {{ settings.siteTitle || UI_TEXTS.nav.defaultTitle }}
         </h1>
         <div class="flex items-center gap-3">
+          <AutoPlayButton />
           <button
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
             @click="toggle"
@@ -99,6 +100,7 @@
   import { useSettingsStore } from '../stores/settings';
   import UploadDialog from './UploadDialog.vue';
   import SettingsPanel from './SettingsPanel.vue';
+  import AutoPlayButton from './AutoPlayButton.vue';
   import { UI_TEXTS } from '../config/texts';
 
   const settings = useSettingsStore();

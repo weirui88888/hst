@@ -8,6 +8,23 @@ import { vGsap } from './directives/gsapScroll';
 import { setupCalendar, DatePicker } from 'v-calendar';
 import { applySiteThemeCSSVariables } from './config/siteTheme';
 
+// 全局滚动恢复机制 - 修复双重滚动条问题
+const ensureScrollable = () => {
+  if (typeof document !== 'undefined') {
+    // 确保html处理滚动，body不滚动
+    document.documentElement.style.overflowX = 'hidden';
+    document.documentElement.style.overflowY = 'auto';
+    document.body.style.overflowX = 'hidden';
+    document.body.style.overflowY = 'hidden';
+  }
+};
+
+// 在页面加载时确保可以滚动
+ensureScrollable();
+
+// 监听页面可见性变化，确保滚动状态正确
+document.addEventListener('visibilitychange', ensureScrollable);
+
 const app = createApp(App);
 app.use(createPinia());
 app.use(setupCalendar, {});

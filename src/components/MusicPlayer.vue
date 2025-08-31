@@ -86,6 +86,9 @@
     });
 
     if (audioRef.value && hasUserInteracted.value) {
+      // 确保音频不是静音的
+      audioRef.value.muted = false;
+
       audioRef.value
         .play()
         .then(() => {
@@ -93,6 +96,20 @@
         })
         .catch((error) => {
           console.error('播放失败:', error);
+          // 如果播放失败，尝试静音播放然后取消静音
+          if (error.name === 'NotAllowedError') {
+            console.log('尝试静音播放然后取消静音');
+            audioRef.value!.muted = true;
+            audioRef
+              .value!.play()
+              .then(() => {
+                audioRef.value!.muted = false;
+                console.log('静音播放成功，已取消静音');
+              })
+              .catch((mutedError) => {
+                console.error('静音播放也失败:', mutedError);
+              });
+          }
         });
     } else {
       console.log('播放条件不满足:', {
@@ -151,6 +168,20 @@
     }
   };
 
+  // 停止旋转动画
+  const stopRotation = () => {
+    // 计算当前旋转角度并保存
+    const elapsed = Date.now() - animationStartTime.value;
+    const currentAngle = ((elapsed * 45) / 1000) % 360; // 每8秒转360度
+    savedRotationAngle.value = (savedRotationAngle.value + currentAngle) % 360;
+
+    // 立即应用正确的角度，防止动画继续
+    const cdElements = document.querySelectorAll('.cd, .cd-mini');
+    cdElements.forEach((el) => {
+      (el as HTMLElement).style.transform = `rotate(${savedRotationAngle.value}deg)`;
+    });
+  };
+
   // 监听音频事件
   const handleAudioEnded = () => {
     isPlaying.value = false;
@@ -195,6 +226,10 @@
   onMounted(() => {
     audioRef.value = new Audio('/music/youarethereson.mp3');
 
+    // 设置音频属性以支持自动播放
+    audioRef.value.muted = false; // 确保音频不是静音的
+    audioRef.value.volume = 0.5; // 设置适中的音量
+
     // 添加音频加载事件监听
     audioRef.value.addEventListener('loadstart', () => {
       console.log('音频开始加载');
@@ -218,10 +253,22 @@
     audioRef.value.addEventListener('pause', handleAudioPause);
     audioRef.value.addEventListener('timeupdate', handleTimeUpdate);
     audioRef.value.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audioRef.value.loop = true; // 循环播放
+    audioRef.value.loop = false; // 不循环播放，支持自动播放功能
 
     // 预加载音频
     audioRef.value.load();
+
+    // 将音频元素暴露到全局，供其他组件使用
+    (window as any).musicAudio = audioRef.value;
+
+    // 添加点击事件监听器，确保用户交互后可以播放
+    const handleDocumentClick = () => {
+      console.log('文档点击事件触发，设置用户交互标志');
+      hasUserInteracted.value = true;
+      document.removeEventListener('click', handleDocumentClick);
+    };
+
+    document.addEventListener('click', handleDocumentClick);
 
     // 添加滚动监听器来启用音频播放（仅桌面端且设置开启时）
     const handleScroll = () => {
@@ -254,9 +301,10 @@
 
     window.addEventListener('scroll', handleScroll);
 
-    // 组件卸载时清理滚动监听器
+    // 组件卸载时清理事件监听器
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('click', handleDocumentClick);
     });
   });
 

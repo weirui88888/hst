@@ -450,7 +450,11 @@
       } else {
         // 恢复页面滚动
         if (typeof document !== 'undefined') {
-          document.body.style.overflow = '';
+          // 恢复正确的滚动设置
+          document.documentElement.style.overflowX = 'hidden';
+          document.documentElement.style.overflowY = 'auto';
+          document.body.style.overflowX = 'hidden';
+          document.body.style.overflowY = 'hidden';
         }
       }
     },
@@ -459,7 +463,11 @@
 
   onUnmounted(() => {
     if (typeof document !== 'undefined') {
-      document.body.style.overflow = '';
+      // 恢复正确的滚动设置
+      document.documentElement.style.overflowX = 'hidden';
+      document.documentElement.style.overflowY = 'auto';
+      document.body.style.overflowX = 'hidden';
+      document.body.style.overflowY = 'hidden';
     }
     if (typeof window !== 'undefined') {
       document.removeEventListener('mousedown', onGlobalMouseDown as any);

@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>我的故事 · 温暖作品集</title>
     <style>
-      @media (max-width: 450px) {
-        html,
-        body {
-          overflow-x: hidden;
-        }
+      /* 修复双重滚动条问题 */
+      html {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      body {
+        overflow-x: hidden;
+        overflow-y: hidden; /* 让html处理滚动，body不滚动 */
       }
     </style>
   </head>

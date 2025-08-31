@@ -183,7 +183,7 @@
 
             <!-- 音乐自动播放设置 -->
             <div
-              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 hidden md:block"
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
@@ -245,7 +245,7 @@
           </div>
 
           <!-- 时间轴设置 -->
-          <div class="space-y-4">
+          <div class="space-y-4 hidden md:block">
             <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
               {{ UI_TEXTS.settings.timelineSettings }}
             </h3>

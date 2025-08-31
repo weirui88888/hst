@@ -144,8 +144,11 @@
       '--mask-width': `${Math.max(24, props.maskWidth || 64)}px`,
       '--move-distance': `${topMoveDistance}%`,
       // 全宽贴边：让组件突破父容器左右内边距/页面默认 margin
-      marginLeft: (props.fullBleed ?? true) ? 'calc(50% - 50vw)' : undefined,
-      marginRight: (props.fullBleed ?? true) ? 'calc(50% - 50vw)' : undefined,
+      // 修复横向滚动问题：使用更安全的全宽实现方式
+      marginLeft: (props.fullBleed ?? true) ? 'calc(-1 * (100vw - 100%) / 2)' : undefined,
+      marginRight: (props.fullBleed ?? true) ? 'calc(-1 * (100vw - 100%) / 2)' : undefined,
+      // 确保容器不会超出视口宽度
+      maxWidth: '100vw',
     } as any;
   });
 
@@ -256,10 +259,9 @@
     /* 无缝滚动：使用 will-change 优化性能 */
     will-change: transform;
     animation: marquee var(--marquee-duration) linear infinite;
-    /* 确保容器有足够的宽度来容纳所有图片 */
-    min-width: max-content;
-    /* 确保图片能够正确显示 */
-    width: max-content;
+    /* 修复横向滚动问题：移除可能导致溢出的样式 */
+    /* 确保图片能够正确显示，但不强制最小宽度 */
+    width: fit-content;
   }
 
   .marquee-row.reverse {
