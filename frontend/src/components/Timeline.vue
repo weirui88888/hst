@@ -110,7 +110,7 @@
       <div class="mt-20 flex flex-col items-center select-none">
         <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
         <div class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500">
-          {{ settingsStore.siteEndText || UI_TEXTS.settings.endText.default }}
+          『 {{ settingsStore.siteEndText || UI_TEXTS.settings.endText.default }} 』
         </div>
       </div>
     </div>

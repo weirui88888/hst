@@ -8,7 +8,7 @@ export const UI_TEXTS = {
   nav: {
     add: '录入',
     settings: '设置',
-    defaultTitle: '我的故事',
+    defaultTitle: '多多与贺贺的青春',
   },
 
   // 设置面板
@@ -33,12 +33,24 @@ export const UI_TEXTS = {
       placeholder: '多多与贺贺的青春',
     },
 
-    // 结尾文案
+    // 时间轴开始文案
     endText: {
-      title: '结尾文案',
-      description: '设置时间轴底部的结尾提示文案',
-      placeholder: '— 已到时间轴结尾 —',
-      default: '— 已到时间轴结尾 —',
+      title: '时间轴开始文案',
+      description: '设置时间轴故事的开始提示文案',
+      placeholder: '十二年的陪伴，是最长情的告白',
+      default: '十二年的陪伴，是最长情的告白',
+    },
+
+    // 尾声寄语
+    epilogueMessage: {
+      title: '尾声寄语',
+      description: '设置页面底部的尾声寄语文案',
+      mainTitle: '主寄语',
+      mainPlaceholder: '流转的岁月里，爱从未缺席',
+      mainDefault: '流转的岁月里，爱从未缺席',
+      subTitle: '副寄语',
+      subPlaceholder: '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
+      subDefault: '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
     },
 
     // 时间轴位置
@@ -68,6 +80,7 @@ export const UI_TEXTS = {
     // 其他
     moreSettings: '更多设置选项将在这里添加...',
     save: '保存',
+    cancel: '取消',
   },
 
   // 上传弹窗
@@ -92,13 +105,15 @@ export const UI_TEXTS = {
   // Toast提示
   toast: {
     saveSuccess: '保存成功',
+    configUpdated: '配置已更新',
+    uploadSuccess: '我们的回忆又+1😊',
   },
 
-  // 故事延续文案
+  // 故事延续文案（默认值，实际使用配置中的值）
   storyContinuation: {
-    title: '多多与贺贺的故事，不止于此',
+    title: '流转的岁月里，爱从未缺席',
     subtitle:
-      '每一个瞬间都是珍贵的回忆，每一张照片都承载着美好的时光。让我们继续书写属于我们的精彩故事。',
+      '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
   },
 } as const;
 

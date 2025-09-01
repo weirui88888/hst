@@ -14,7 +14,7 @@ export const UI_TEXTS = {
   nav: {
     add: "录入",
     settings: "设置",
-    defaultTitle: "我的故事"
+    defaultTitle: "多多与贺贺的青春"
   },
 
   // 设置面板相关文本

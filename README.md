@@ -73,7 +73,7 @@ RATE_LIMIT_MAX_REQUESTS=100
 VITE_API_BASE_URL=http://localhost:3000/api
 
 # 应用配置
-VITE_APP_TITLE=我的故事时间轴
+VITE_APP_TITLE=多多与贺贺的青春
 VITE_APP_VERSION=1.0.0
 ```
 

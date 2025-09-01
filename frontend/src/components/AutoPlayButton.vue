@@ -7,7 +7,7 @@
   >
     <svg
       v-if="!isAutoPlaying"
-      class="w-4 h-4"
+      class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -19,7 +19,7 @@
         d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347c-.75.412-1.667-.13-1.667-.986V5.653Z"
       />
     </svg>
-    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg v-else class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         stroke-linecap="round"
         stroke-linejoin="round"

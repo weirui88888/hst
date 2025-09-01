@@ -3,10 +3,10 @@
     <!-- 设置面板 -->
     <div
       v-if="isOpen"
-      class="fixed top-0 right-0 h-full w-80 bg-neutral-100 dark:bg-neutral-900 shadow-2xl z-[60] transform transition-transform duration-300"
+      class="fixed top-0 right-0 h-full w-80 bg-neutral-100 dark:bg-neutral-900 shadow-2xl z-[60] transform transition-transform duration-300 flex flex-col"
       :class="{ 'translate-x-0': isOpen, 'translate-x-full': !isOpen }"
     >
-      <div class="p-6 h-full overflow-y-auto">
+      <div class="flex-1 overflow-y-auto p-6 pb-20">
         <!-- 面板头部 -->
         <div
           class="flex items-center justify-between mb-8 pb-4 border-b border-neutral-700 dark:border-neutral-600"
@@ -40,7 +40,7 @@
             </h2>
           </div>
           <button
-            @click="toggleSettings"
+            @click="handleCloseSettings"
             class="text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 transition-all duration-200 bg-none border-none"
             style="background: none; border: none"
           >
@@ -140,18 +140,10 @@
                   :placeholder="UI_TEXTS.settings.siteTitle.placeholder"
                   class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                 />
-                <button
-                  type="button"
-                  class="text-xs px-2 py-1 rounded-md bg-neutral-300 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-400 dark:hover:bg-neutral-600 transition-colors"
-                  style="border: none"
-                  @click="saveSiteTitle"
-                >
-                  {{ UI_TEXTS.settings.save }}
-                </button>
               </div>
             </div>
 
-            <!-- 结尾文案设置 -->
+            <!-- 时间轴开始文案设置 -->
             <div
               class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
             >
@@ -170,14 +162,46 @@
                   :placeholder="UI_TEXTS.settings.endText.placeholder"
                   class="flex-1 px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                 />
-                <button
-                  type="button"
-                  class="text-xs px-2 py-1 rounded-md bg-neutral-300 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-400 dark:hover:bg-neutral-600 transition-colors"
-                  style="border: none"
-                  @click="saveSiteEndText"
-                >
-                  {{ UI_TEXTS.settings.save }}
-                </button>
+              </div>
+            </div>
+
+            <!-- 尾声寄语设置 -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+            >
+              <div>
+                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  {{ UI_TEXTS.settings.epilogueMessage.title }}
+                </h4>
+                <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                  {{ UI_TEXTS.settings.epilogueMessage.description }}
+                </p>
+              </div>
+              <div class="mt-3 space-y-3">
+                <!-- 主寄语 -->
+                <div>
+                  <label class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block">
+                    {{ UI_TEXTS.settings.epilogueMessage.mainTitle }}
+                  </label>
+                  <input
+                    v-model="localEpilogueMainTitle"
+                    type="text"
+                    :placeholder="UI_TEXTS.settings.epilogueMessage.mainPlaceholder"
+                    class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+                  />
+                </div>
+                <!-- 副寄语 -->
+                <div>
+                  <label class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block">
+                    {{ UI_TEXTS.settings.epilogueMessage.subTitle }}
+                  </label>
+                  <input
+                    v-model="localEpilogueSubTitle"
+                    type="text"
+                    :placeholder="UI_TEXTS.settings.epilogueMessage.subPlaceholder"
+                    class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
+                  />
+                </div>
               </div>
             </div>
 
@@ -350,19 +374,7 @@
             </div>
           </div>
 
-          <!-- 其他设置区域（预留） -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
-              {{ UI_TEXTS.settings.otherSettings }}
-            </h3>
-            <div
-              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
-            >
-              <p class="text-sm text-neutral-600 dark:text-neutral-300">
-                {{ UI_TEXTS.settings.moreSettings }}
-              </p>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -370,7 +382,7 @@
     <!-- 背景遮罩 -->
     <div
       v-if="isOpen"
-      @click="toggleSettings"
+      @click="handleCloseSettings"
       class="fixed inset-0 bg-black bg-opacity-50 z-[55]"
     ></div>
   </div>
@@ -378,7 +390,7 @@
 
 <script setup lang="ts">
   // @ts-nocheck
-  import { computed } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { UI_TEXTS } from '../config/texts';
 
   const emit = defineEmits([
@@ -388,6 +400,8 @@
     'update:timeAxisPosition',
     'update:siteTitle',
     'update:siteEndText',
+    'update:epilogueMainTitle',
+    'update:epilogueSubTitle',
     'update:musicAutoPlay',
   ]);
 
@@ -398,21 +412,79 @@
     modelValue?: boolean;
     siteTitle?: string;
     siteEndText?: string;
+    epilogueMainTitle?: string;
+    epilogueSubTitle?: string;
     musicAutoPlay?: boolean;
   }>();
 
-  const localSiteTitle = computed({
-    get: () => props.siteTitle ?? '我的故事',
-    set: (v: string) => emit('update:siteTitle', v),
+  // 本地状态，用于跟踪配置是否已修改
+  const hasChanges = ref(false);
+
+  // 本地状态，用于在编辑过程中保持用户输入的值
+  const localInputs = ref({
+    siteTitle: props.siteTitle || '多多与贺贺的青春',
+    siteEndText: props.siteEndText || '十二年的陪伴，是最长情的告白',
+    epilogueMainTitle: props.epilogueMainTitle || '流转的岁月里，爱从未缺席',
+    epilogueSubTitle: props.epilogueSubTitle || '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
   });
+
+  // 监听props变化，只在面板打开时更新本地状态
+  watch(() => props.modelValue, (isOpen) => {
+    if (isOpen) {
+      // 面板打开时，同步props到本地状态
+      localInputs.value.siteTitle = props.siteTitle || '多多与贺贺的青春';
+      localInputs.value.siteEndText = props.siteEndText || '十二年的陪伴，是最长情的告白';
+      localInputs.value.epilogueMainTitle = props.epilogueMainTitle || '流转的岁月里，爱从未缺席';
+      localInputs.value.epilogueSubTitle = props.epilogueSubTitle || '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !';
+    }
+  });
+
+  const localSiteTitle = computed({
+    get: () => localInputs.value.siteTitle,
+    set: (v: string) => {
+      // 直接使用用户输入的值，不应用默认值
+      localInputs.value.siteTitle = v;
+      emit('update:siteTitle', v);
+      hasChanges.value = true;
+    },
+  });
+
   const localSiteEndText = computed({
-    get: () => props.siteEndText ?? '— 已到时间轴结尾 —',
-    set: (v: string) => emit('update:siteEndText', v),
+    get: () => localInputs.value.siteEndText,
+    set: (v: string) => {
+      // 直接使用用户输入的值，不应用默认值
+      localInputs.value.siteEndText = v;
+      emit('update:siteEndText', v);
+      hasChanges.value = true;
+    },
+  });
+
+  const localEpilogueMainTitle = computed({
+    get: () => localInputs.value.epilogueMainTitle,
+    set: (v: string) => {
+      // 直接使用用户输入的值，不应用默认值
+      localInputs.value.epilogueMainTitle = v;
+      emit('update:epilogueMainTitle', v);
+      hasChanges.value = true;
+    },
+  });
+
+  const localEpilogueSubTitle = computed({
+    get: () => localInputs.value.epilogueSubTitle,
+    set: (v: string) => {
+      // 直接使用用户输入的值，不应用默认值
+      localInputs.value.epilogueSubTitle = v;
+      emit('update:epilogueSubTitle', v);
+      hasChanges.value = true;
+    },
   });
 
   const musicAutoPlay = computed({
     get: () => props.musicAutoPlay ?? true,
-    set: (v: boolean) => emit('update:musicAutoPlay', v),
+    set: (v: boolean) => {
+      emit('update:musicAutoPlay', v);
+      hasChanges.value = true;
+    },
   });
   const isOpen = computed({
     get: (): boolean => !!props.modelValue,
@@ -423,28 +495,45 @@
     isOpen.value = !isOpen.value;
   };
 
+  const handleCloseSettings = () => {
+    // 关闭设置面板时，如果有修改则触发更新
+    if (hasChanges.value) {
+      // 触发父组件的更新逻辑
+      emit('update:modelValue', false);
+      hasChanges.value = false;
+    } else {
+      isOpen.value = false;
+    }
+  };
+
+
+
   const toggleSeasonalIndicator = () => {
     emit('update:seasonalIndicator', !props.seasonalIndicator);
+    hasChanges.value = true;
   };
 
   const toggleAnimationsEnabled = () => {
     emit('update:animationsEnabled', !props.animationsEnabled);
+    hasChanges.value = true;
   };
 
   const toggleMusicAutoPlay = () => {
     emit('update:musicAutoPlay', !props.musicAutoPlay);
+    hasChanges.value = true;
   };
 
   const setTimeAxisPosition = (position: string) => {
     emit('update:timeAxisPosition', position);
+    hasChanges.value = true;
   };
 
-  const saveSiteTitle = () => {
-    emit('update:siteTitle', String(localSiteTitle.value || '').trim());
-  };
-  const saveSiteEndText = () => {
-    emit('update:siteEndText', String(localSiteEndText.value || '').trim());
-  };
+  // 监听面板打开状态，重置修改标记
+  watch(() => props.modelValue, (newValue) => {
+    if (newValue) {
+      hasChanges.value = false;
+    }
+  });
 </script>
 
 <style scoped>

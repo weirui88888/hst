@@ -590,6 +590,16 @@
 
   const store = useTimelineStore();
 
+  // 重置表单到初始状态
+  function resetForm() {
+    title.value = '';
+    content.value = '';
+    tags.value = '';
+    date.value = new Date();
+    media.value = [];
+    previewLocalUrl.value = '';
+  }
+
   // 计算表单是否有效
   const isFormValid = computed(() => {
     return title.value.trim() && content.value.trim() && date.value && media.value.length > 0;
@@ -634,8 +644,13 @@
     store.addItem(newItem);
 
     // 显示成功提示
-    (window as any).$toast?.success(UI_TEXTS.toast.saveSuccess);
-    // 暂不自动关闭弹窗，并打印完整提交对象，便于查看
+    (window as any).$toast?.success(UI_TEXTS.toast.uploadSuccess);
+    
+    // 关闭录入弹窗
+    emit('update:modelValue', false);
+    
+    // 重置表单
+    resetForm();
 
   }
 

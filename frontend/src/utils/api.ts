@@ -103,6 +103,8 @@ export const timelineAPI = {
 export interface UserConfig {
   siteTitle: string;
   siteEndText: string;
+  epilogueMainTitle: string;
+  epilogueSubTitle: string;
   timeAxisPosition: 'left' | 'right';
   seasonalIndicator: boolean;
   animationsEnabled: boolean;
@@ -111,6 +113,8 @@ export interface UserConfig {
 export interface UpdateUserConfigRequest {
   siteTitle: string;
   siteEndText: string;
+  epilogueMainTitle: string;
+  epilogueSubTitle: string;
   timeAxisPosition?: 'left' | 'right';
   seasonalIndicator?: boolean;
   animationsEnabled?: boolean;

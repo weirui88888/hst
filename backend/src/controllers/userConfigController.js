@@ -9,8 +9,10 @@ export const getUserConfig = async (req, res) => {
     if (!config) {
       // 创建默认配置
       config = new UserConfig({
-        siteTitle: '我的故事',
-        siteEndText: '— 已到时间轴结尾 —',
+        siteTitle: '多多与贺贺的青春',
+        siteEndText: '十二年的陪伴，是最长情的告白',
+        epilogueMainTitle: '流转的岁月里，爱从未缺席',
+        epilogueSubTitle: '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
         timeAxisPosition: 'right',
         seasonalIndicator: false,
         animationsEnabled: true
@@ -21,6 +23,8 @@ export const getUserConfig = async (req, res) => {
     res.json({
       siteTitle: config.siteTitle,
       siteEndText: config.siteEndText,
+      epilogueMainTitle: config.epilogueMainTitle,
+      epilogueSubTitle: config.epilogueSubTitle,
       timeAxisPosition: config.timeAxisPosition,
       seasonalIndicator: config.seasonalIndicator,
       animationsEnabled: config.animationsEnabled
@@ -37,13 +41,13 @@ export const getUserConfig = async (req, res) => {
 // 更新用户配置
 export const updateUserConfig = async (req, res) => {
   try {
-    const { siteTitle, siteEndText, timeAxisPosition, seasonalIndicator, animationsEnabled } = req.body;
+    const { siteTitle, siteEndText, epilogueMainTitle, epilogueSubTitle, timeAxisPosition, seasonalIndicator, animationsEnabled } = req.body;
 
     // 验证必填字段
-    if (!siteTitle || !siteEndText) {
+    if (!siteTitle || !siteEndText || !epilogueMainTitle || !epilogueSubTitle) {
       return res.status(400).json({
         error: '缺少必填字段',
-        message: 'siteTitle 和 siteEndText 为必填字段'
+        message: 'siteTitle、siteEndText、epilogueMainTitle 和 epilogueSubTitle 为必填字段'
       });
     }
 
@@ -59,6 +63,8 @@ export const updateUserConfig = async (req, res) => {
     const config = new UserConfig({
       siteTitle,
       siteEndText,
+      epilogueMainTitle,
+      epilogueSubTitle,
       timeAxisPosition: timeAxisPosition || 'right',
       seasonalIndicator: seasonalIndicator !== undefined ? seasonalIndicator : false,
       animationsEnabled: animationsEnabled !== undefined ? animationsEnabled : true
@@ -71,6 +77,8 @@ export const updateUserConfig = async (req, res) => {
       config: {
         siteTitle: config.siteTitle,
         siteEndText: config.siteEndText,
+        epilogueMainTitle: config.epilogueMainTitle,
+        epilogueSubTitle: config.epilogueSubTitle,
         timeAxisPosition: config.timeAxisPosition,
         seasonalIndicator: config.seasonalIndicator,
         animationsEnabled: config.animationsEnabled

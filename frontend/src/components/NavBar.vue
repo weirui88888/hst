@@ -4,7 +4,7 @@
       class="sticky top-0 z-50 backdrop-blur dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800"
     >
       <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <h1 class="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+        <h1 class="text-lg md:text-xl lg:text-2xl font-semibold text-neutral-800 dark:text-neutral-200">
           {{ settings.siteTitle || UI_TEXTS.nav.defaultTitle }}
         </h1>
         <div class="flex items-center gap-3">
@@ -16,7 +16,7 @@
           >
             <svg
               v-if="theme.mode === 'dark'"
-              class="w-4 h-4"
+              class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -28,7 +28,7 @@
                 d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
               />
             </svg>
-            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-else class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -42,7 +42,7 @@
             @click="openForm"
             :title="UI_TEXTS.nav.add"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -56,7 +56,7 @@
             @click="openSettings"
             :title="UI_TEXTS.nav.settings"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -82,13 +82,18 @@
       :timeAxisPosition="settings.timeAxisPosition"
       :siteTitle="settings.siteTitle"
       :siteEndText="settings.siteEndText"
+      :epilogueMainTitle="settings.epilogueMainTitle"
+      :epilogueSubTitle="settings.epilogueSubTitle"
       :musicAutoPlay="settings.musicAutoPlay"
       @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
       @update:timeAxisPosition="settings.setTimeAxisPosition"
       @update:siteTitle="settings.setSiteTitle"
       @update:siteEndText="settings.setSiteEndText"
+      @update:epilogueMainTitle="settings.setEpilogueMainTitle"
+      @update:epilogueSubTitle="settings.setEpilogueSubTitle"
       @update:musicAutoPlay="settings.setMusicAutoPlay"
+      @update:modelValue="handleSettingsPanelChange"
     />
   </div>
 </template>
@@ -102,6 +107,7 @@
   import SettingsPanel from './SettingsPanel.vue';
   import AutoPlayButton from './AutoPlayButton.vue';
   import { UI_TEXTS } from '../config/texts';
+  import { useToast } from '../utils/toast';
 
   const settings = useSettingsStore();
 
@@ -121,6 +127,20 @@
 
   const updateAnimationsEnabled = (value: boolean) => {
     effects.setAnimationsEnabled(value);
+  };
+
+  const toast = useToast();
+
+  const handleSettingsPanelChange = (newValue: boolean) => {
+    // 当设置面板关闭时，如果有未保存的更改，则调用API更新
+    if (!newValue && settings.hasUnsavedChanges) {
+      settings.updateUserConfig()
+        .then(() => {
+          // 配置更新成功，显示toast提示
+          toast.success(UI_TEXTS.toast.configUpdated);
+        })
+        .catch(console.error);
+    }
   };
 </script>
 

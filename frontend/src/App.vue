@@ -26,10 +26,10 @@
         <h2
           class="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-neutral-200 mb-4 typewriter-text"
         >
-          {{ UI_TEXTS.storyContinuation.title }}
+          {{ settings.epilogueMainTitle || UI_TEXTS.storyContinuation.title }}
         </h2>
         <p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed fade-in-text">
-          {{ UI_TEXTS.storyContinuation.subtitle }}
+          {{ settings.epilogueSubTitle || UI_TEXTS.storyContinuation.subtitle }}
         </p>
       </div>
     </section>
@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
   // @ts-nocheck
-  import { ref, onMounted, onUnmounted, computed } from 'vue';
+  import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
   import NavBar from './components/NavBar.vue';
   import CoverHero from './components/CoverHero.vue';
   import Timeline from './components/Timeline.vue';
@@ -68,6 +68,12 @@
   const hasError = computed(() => 
     timelineStore.error || settings.error
   );
+
+  // 设置页面标题
+  const setPageTitle = (title?: string) => {
+    const pageTitle = title || settings.siteTitle || UI_TEXTS.nav.defaultTitle;
+    document.title = pageTitle;
+  };
   
   // 重试加载数据
   const retryLoading = async () => {
@@ -78,6 +84,8 @@
         timelineStore.loadTimelineData(),
         settings.loadUserConfig()
       ]);
+      // 重新设置页面标题
+      setPageTitle();
     } catch (error) {
       console.error('重试加载数据失败:', error);
     }
@@ -95,6 +103,8 @@
         timelineStore.loadTimelineData(),
         settings.loadUserConfig()
       ]);
+      // 设置页面标题
+      setPageTitle();
     } catch (error) {
       console.error('加载数据失败:', error);
     }
@@ -131,6 +141,11 @@
         document.body.style.overflowY = 'hidden';
       };
     }
+  });
+
+  // 监听站点标题变化，自动更新页面标题
+  watch(() => settings.siteTitle, (newTitle) => {
+    setPageTitle(newTitle);
   });
 
   onUnmounted(() => {

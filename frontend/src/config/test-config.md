@@ -20,9 +20,9 @@
 - ✅ 站点标题设置: `UI_TEXTS.settings.siteTitle.title`
 - ✅ 站点标题描述: `UI_TEXTS.settings.siteTitle.description`
 - ✅ 站点标题占位符: `UI_TEXTS.settings.siteTitle.placeholder`
-- ✅ 结尾文案标题: `UI_TEXTS.settings.endText.title`
-- ✅ 结尾文案描述: `UI_TEXTS.settings.endText.description`
-- ✅ 结尾文案占位符: `UI_TEXTS.settings.endText.placeholder`
+- ✅ 时间轴开始文案标题: `UI_TEXTS.settings.endText.title`
+- ✅ 时间轴开始文案描述: `UI_TEXTS.settings.endText.description`
+- ✅ 时间轴开始文案占位符: `UI_TEXTS.settings.endText.placeholder`
 - ✅ 时间轴位置标题: `UI_TEXTS.settings.timelinePosition.title`
 - ✅ 时间轴位置描述: `UI_TEXTS.settings.timelinePosition.leftDesc/rightDesc`
 - ✅ 时间轴位置状态: `UI_TEXTS.settings.timelinePosition.left/right`
@@ -50,12 +50,12 @@
 
 ### 5. 时间轴 (Timeline.vue)
 
-- ✅ 默认结尾文案: `UI_TEXTS.settings.endText.default`
+- ✅ 默认时间轴开始文案: `UI_TEXTS.settings.endText.default`
 
 ### 6. 设置存储 (settings.ts)
 
 - ✅ 默认站点标题: `UI_TEXTS.nav.defaultTitle`
-- ✅ 默认结尾文案: `UI_TEXTS.settings.endText.default`
+- ✅ 默认时间轴开始文案: `UI_TEXTS.settings.endText.default`
 
 ## 测试步骤
 
@@ -68,7 +68,7 @@
    - 点击录入按钮打开上传弹窗
    - 上传弹窗中所有文本显示正确
    - 空状态下显示正确的提示文本
-   - 时间轴底部显示正确的结尾文案
+   - 时间轴底部显示正确的时间轴开始文案
 
 ## 预期结果
 

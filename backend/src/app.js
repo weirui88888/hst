@@ -50,11 +50,11 @@ app.use(cors({
 }));
 
 // 请求限流
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15分钟
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100 // 限制每个IP 15分钟内最多100个请求
-});
-app.use('/api/', limiter);
+// const limiter = rateLimit({
+//   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15分钟
+//   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100 // 限制每个IP 15分钟内最多100个请求
+// });
+// app.use('/api/', limiter);
 
 // 日志中间件
 app.use(morgan('combined'));
