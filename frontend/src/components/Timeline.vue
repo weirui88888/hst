@@ -99,7 +99,7 @@
                   >#{{ tag }}</span
                 >
                 <span class="ml-auto text-sm text-neutral-500 dark:text-neutral-400 font-medium">{{
-                  item.date
+                  formatDate(item.date)
                 }}</span>
               </div>
             </div>
@@ -177,9 +177,9 @@
     if ((props.seasonalIndicator ?? false) && date) {
       const month = getMonthFromDate(date);
       const season = getSeasonFromMonth(month);
-      return `${season} ${date}`;
+      return `${season} ${formatDate(date)}`;
     }
-    return date;
+    return formatDate(date);
   });
 
   const setSectionRef = (el: any, idx: number) => {
@@ -612,16 +612,20 @@
     return { x, y };
   };
 
-  const getMonthFromDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const getMonthFromDate = (dateValue: Date | string) => {
+    if (dateValue instanceof Date) {
+      return dateValue.getMonth() + 1;
+    }
+    
+    const date = new Date(dateValue);
     if (!isNaN(date.getTime())) {
       return date.getMonth() + 1;
     }
-    const monthMatch = dateString.match(/(\d{1,2})[-/](\d{1,2})/);
+    const monthMatch = dateValue.match(/(\d{1,2})[-/](\d{1,2})/);
     if (monthMatch) {
       return parseInt(monthMatch[2]);
     }
-    const isoMatch = dateString.match(/(\d{4})-(\d{1,2})/);
+    const isoMatch = dateValue.match(/(\d{4})-(\d{1,2})/);
     if (isoMatch) {
       return parseInt(isoMatch[2]);
     }
@@ -638,6 +642,33 @@
     } else {
       return '❄️冬';
     }
+  };
+
+  // 格式化日期，只显示年月日
+  const formatDate = (dateValue: Date | string) => {
+    if (!dateValue) return '';
+    
+    let date: Date;
+    if (dateValue instanceof Date) {
+      date = dateValue;
+    } else if (typeof dateValue === 'string') {
+      // 如果已经是YYYY-MM-DD格式，直接返回
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+      // 尝试解析日期字符串
+      date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return dateValue; // 如果无法解析，返回原字符串
+      }
+    } else {
+      return '';
+    }
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   onMounted(() => {

@@ -1,0 +1,212 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'pnpm'
+        
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+        run_install: false
+        
+    - name: Install dependencies
+      run: pnpm install
+      
+    - name: Create frontend production environment file
+      run: |
+        cat << EOF > frontend/.env.production
+        VITE_OSS_BUCKET=${{ secrets.VITE_OSS_BUCKET }}
+        VITE_OSS_REGION=${{ secrets.VITE_OSS_REGION }}
+        VITE_OSS_DOMAIN=${{ secrets.VITE_OSS_DOMAIN }}
+        VITE_OSS_DIRECTORY=${{ secrets.VITE_OSS_DIRECTORY }}
+        VITE_OSS_ACCESS_KEY_ID=${{ secrets.VITE_OSS_ACCESS_KEY_ID }}
+        VITE_OSS_ACCESS_KEY_SECRET=${{ secrets.VITE_OSS_ACCESS_KEY_SECRET }}
+        EOF
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        pnpm run build
+        
+    - name: Upload frontend build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/dist
+
+  build-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'pnpm'
+        
+    - name: Create backend production environment file
+      run: |
+        cat << EOF > backend/.env.production
+        NODE_ENV=production
+        PORT=3000
+        MONGODB_URI=${{ secrets.MONGODB_URI }}
+        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+        RATE_LIMIT_WINDOW_MS=900000
+        RATE_LIMIT_MAX=100
+        EOF
+        
+    - name: Upload backend source
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-source
+        path: backend/
+
+  build-frontend-docker:
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download frontend artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/dist
+        
+    - name: Show full project directory structure
+      run: |
+        echo "📁 当前工作目录结构："
+        tree -L 2
+        
+    - name: Build frontend Docker image
+      run: |
+        cd frontend
+        docker build -t hst-frontend:latest .
+        
+    - name: List Docker images
+      run: docker images
+        
+    - name: Save frontend Docker image to tar
+      run: docker save -o hst-frontend.tar hst-frontend:latest
+        
+    - name: Upload frontend image tar artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hst-frontend-tar
+        path: hst-frontend.tar
+
+  build-backend-docker:
+    needs: [build-backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download backend artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-source
+        path: backend/
+        
+    - name: Show full project directory structure
+      run: |
+        echo "📁 当前工作目录结构："
+        tree -L 2
+        
+    - name: Build backend Docker image
+      run: |
+        cd backend
+        docker build -t hst-backend:latest .
+        
+    - name: List Docker images
+      run: docker images
+        
+    - name: Save backend Docker image to tar
+      run: docker save -o hst-backend.tar hst-backend:latest
+        
+    - name: Upload backend image tar artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hst-backend-tar
+        path: hst-backend.tar
+
+  deploy-to-server:
+    needs: [build-frontend-docker, build-backend-docker]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download frontend tar artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: hst-frontend-tar
+        path: ./
+        
+    - name: Download backend tar artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: hst-backend-tar
+        path: ./
+        
+    - name: Deploy to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        source: "*.tar"
+        target: '~/'
+        
+    - name: Load and start containers on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        script: |
+          # 停止并删除旧容器
+          docker stop hst-frontend hst-backend || true
+          docker rm hst-frontend hst-backend || true
+          
+          # 删除旧镜像
+          docker rmi hst-frontend:latest hst-backend:latest || true
+          
+          # 加载新镜像
+          docker load -i ~/hst-frontend.tar
+          docker load -i ~/tmp/hst-backend.tar
+          
+          # 启动新容器
+          docker run -d -p 3000:3000 --name hst-backend hst-backend:latest
+            
+          docker run -d -p 80:80 --name hst-frontend  hst-frontend:latest
+            
+          # 清理临时文件
+          rm -f ~/*.tar
+          
+          # 显示运行状态
+          docker ps

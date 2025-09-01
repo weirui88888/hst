@@ -17,7 +17,7 @@
             >#{{ tag }}</span
           >
           <span class="ml-auto text-neutral-500 dark:text-neutral-400 font-medium">{{
-            latest.date
+            formatDate(latest.date)
           }}</span>
         </div>
       </div>
@@ -35,6 +35,33 @@
 
   const { latest: latestProp } = defineProps<{ latest?: TimelineItem | null }>();
   const latest = computed(() => latestProp ?? null);
+
+  // 格式化日期，只显示年月日
+  const formatDate = (dateValue: Date | string) => {
+    if (!dateValue) return '';
+    
+    let date: Date;
+    if (dateValue instanceof Date) {
+      date = dateValue;
+    } else if (typeof dateValue === 'string') {
+      // 如果已经是YYYY-MM-DD格式，直接返回
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+      // 尝试解析日期字符串
+      date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return dateValue; // 如果无法解析，返回原字符串
+      }
+    } else {
+      return '';
+    }
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 </script>
 
 <style scoped></style>

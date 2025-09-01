@@ -388,7 +388,7 @@
     return result;
   });
 
-  const date = ref<string>('');
+  const date = ref<Date | string>('');
   const media = ref<MediaItem[]>([]);
   // 用于左侧预览区域的本地 blob 地址，独立于 media.url（后者用于保存真实 OSS URL）
   const previewLocalUrl = ref<string>('');
@@ -431,7 +431,7 @@
 那缓慢移动的云，
 早已替我们写下温柔的答复。`;
         tags.value = '旅游, 动物';
-        date.value = new Date().toISOString().slice(0, 10);
+        date.value = new Date();
         media.value = [];
       }
     },
@@ -631,7 +631,7 @@
       title: title.value.trim(),
       content: content.value.trim(),
       tags: tagList,
-      date: formatDateForDisplay(date.value as any),
+      date: date.value instanceof Date ? date.value : new Date(date.value),
       media: media.value,
     };
 

@@ -2,13 +2,17 @@
   <div>
     <NavBar />
     <main class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
-      <CoverHero :latest="latestItem" />
-      <Timeline
-        :items="items"
-        :seasonalIndicator="settings.seasonalIndicator"
-        :animationsEnabled="effects.animationsEnabled"
-        :timeAxisPosition="settings.timeAxisPosition"
-      />
+      <LoadingSpinner v-if="isLoading" />
+      <ErrorMessage v-else-if="hasError" @retry="retryLoading" />
+      <template v-else>
+        <CoverHero :latest="latestItem" />
+        <Timeline
+          :items="items"
+          :seasonalIndicator="settings.seasonalIndicator"
+          :animationsEnabled="effects.animationsEnabled"
+          :timeAxisPosition="settings.timeAxisPosition"
+        />
+      </template>
     </main>
     <!-- 全宽横向滚动组件（直接使用组件内置的全宽贴边功能） -->
     <ImageMarquee :height="180" :gap="6" :speed="100" :hoverPause="true" :fullBleed="true" />
@@ -39,7 +43,7 @@
 
 <script setup lang="ts">
   // @ts-nocheck
-  import { ref, onMounted, onUnmounted } from 'vue';
+  import { ref, onMounted, onUnmounted, computed } from 'vue';
   import NavBar from './components/NavBar.vue';
   import CoverHero from './components/CoverHero.vue';
   import Timeline from './components/Timeline.vue';
@@ -47,6 +51,8 @@
   import Toast from './components/Toast.vue';
   import ImageMarquee from './components/ImageMarquee.vue';
   import MusicPlayer from './components/MusicPlayer.vue';
+  import LoadingSpinner from './components/LoadingSpinner.vue';
+  import ErrorMessage from './components/ErrorMessage.vue';
   import { useTimelineStore } from './stores/timeline';
   import { useEffectsStore } from './stores/effects';
   import { useSettingsStore } from './stores/settings';
@@ -55,15 +61,56 @@
   const timelineStore = useTimelineStore();
   const effects = useEffectsStore();
   const settings = useSettingsStore();
-  const items = timelineStore.sortedItems;
-  const latestItem = items[0] ?? null;
+  
+  // 使用computed响应式获取数据
+  const items = computed(() => timelineStore.timelineItems);
+  const latestItem = computed(() => items.value?.[0] ?? null);
+  
+  console.log('App.vue中的items:', items.value);
+  console.log('timelineStore.$state:', timelineStore.$state);
+  console.log('timelineStore.timelineItems getter:', timelineStore.timelineItems);
+  
+  // 计算是否正在加载
+  const isLoading = computed(() => 
+    timelineStore.loading || settings.loading
+  );
+  
+  // 计算是否有错误
+  const hasError = computed(() => 
+    timelineStore.error || settings.error
+  );
+  
+  
+  // 重试加载数据
+  const retryLoading = async () => {
+    timelineStore.clearError();
+    settings.clearError();
+    try {
+      await Promise.all([
+        timelineStore.loadTimelineData(),
+        settings.loadUserConfig()
+      ]);
+    } catch (error) {
+      console.error('重试加载数据失败:', error);
+    }
+  };
 
   // 滚动触发动画相关
   const storySection = ref<HTMLElement>();
   const isVisible = ref(false);
   let observer: IntersectionObserver | null = null;
 
-  onMounted(() => {
+  onMounted(async () => {
+    // 加载数据
+    try {
+      await Promise.all([
+        timelineStore.loadTimelineData(),
+        settings.loadUserConfig()
+      ]);
+    } catch (error) {
+      console.error('加载数据失败:', error);
+    }
+
     if (storySection.value) {
       observer = new IntersectionObserver(
         (entries) => {
