@@ -100,10 +100,8 @@
   // 将图片分成上下两行，不重合且随机打乱
   const splitAndShuffleImages = computed(() => {
     const images = extractedImages.value;
-    console.log(`[ImageMarquee] 提取到的总图片数: ${images.length}`);
 
     if (images.length === 0) {
-      console.log('[ImageMarquee] 没有提取到图片');
       return { top: [], bottom: [] };
     }
 
@@ -115,9 +113,7 @@
       bottom: shuffled.slice(mid),
     };
 
-    console.log(
-      `[ImageMarquee] 分割结果: 上排${result.top.length}张, 下排${result.bottom.length}张`,
-    );
+
     return result;
   });
 
@@ -131,10 +127,6 @@
     // 这样可以确保在动画过程中能看到更多的图片
     const topMoveDistance = topOriginalCount > 0 ? 25 : 25; // 移动25%显示完整周期
     const bottomMoveDistance = bottomOriginalCount > 0 ? 25 : 25;
-
-    console.log(
-      `[ImageMarquee] 动画配置: 速度=${speed}s, 上排移动=${topMoveDistance}%, 下排移动=${bottomMoveDistance}%`,
-    );
 
     return {
       // 使用 CSS 变量控制主题与尺寸
@@ -184,7 +176,6 @@
   const topImages = computed(() => {
     const images = splitAndShuffleImages.value.top;
     if (images.length === 0) {
-      console.log('[ImageMarquee] topImages: 没有图片');
       return [];
     }
     // 复制4份形成圆环，确保视觉上的无限循环
@@ -193,16 +184,13 @@
     for (let i = 0; i < cycles; i++) {
       result.push(...images);
     }
-    console.log(
-      `[ImageMarquee] topImages: 原始${images.length}张 × ${cycles}周期 = 总共${result.length}张`,
-    );
+
     return result;
   });
 
   const bottomImages = computed(() => {
     const images = splitAndShuffleImages.value.bottom;
     if (images.length === 0) {
-      console.log('[ImageMarquee] bottomImages: 没有图片');
       return [];
     }
     // 复制4份形成圆环，确保视觉上的无限循环
@@ -211,9 +199,7 @@
     for (let i = 0; i < cycles; i++) {
       result.push(...images);
     }
-    console.log(
-      `[ImageMarquee] bottomImages: 原始${images.length}张 × ${cycles}周期 = 总共${result.length}张`,
-    );
+
     return result;
   });
 </script>

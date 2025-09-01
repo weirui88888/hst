@@ -20,8 +20,22 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS 配置
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // 允许没有 origin 的请求（如移动端应用、Postman等）
+    if (!origin) return callback(null, true);
+    
+    // 检查是否在允许列表中，或者是否设置为通配符
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -44,8 +58,7 @@ const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hst-app';
     await mongoose.connect(mongoURI);
-    console.log('✅ MongoDB 连接成功');
-    console.log(`📊 数据库: ${mongoURI.replace(/\/\/.*@/, '//***:***@')}`); // 隐藏密码
+
   } catch (error) {
     console.error('❌ MongoDB 连接失败:', error.message);
     process.exit(1);
@@ -100,10 +113,7 @@ const startServer = async () => {
   await connectDB();
   
   app.listen(PORT, () => {
-    console.log(`🚀 后端服务启动成功`);
-    console.log(`📍 服务地址: http://localhost:${PORT}`);
-    console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📡 API文档: http://localhost:${PORT}/api`);
+
   });
 };
 

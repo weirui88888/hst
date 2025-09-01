@@ -110,7 +110,7 @@
     audio
       .play()
       .then(() => {
-        console.log('自动播放开始');
+
 
         // 计算滚动速度
         const scrollSpeed = calculateScrollSpeed();
@@ -189,7 +189,7 @@
 
     // 如果滚动距离超过阈值，认为是用户手动滚动
     if (scrollDifference > 15) {
-      console.log('检测到用户手动滚动，停止自动播放');
+
       stopAutoPlay();
       return;
     }
@@ -214,7 +214,7 @@
         audio.addEventListener('ended', handleMusicEnded);
         // 监听音频加载完成事件
         audio.addEventListener('loadedmetadata', () => {
-          console.log('音频元数据加载完成，时长:', audio.duration);
+
         });
       } else {
         setTimeout(checkMusicPlayer, 100);

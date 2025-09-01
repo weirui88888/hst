@@ -1,12 +1,9 @@
 // API基础配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-console.log('API基础URL:', API_BASE_URL);
-console.log('环境变量:', import.meta.env.VITE_API_BASE_URL);
 
 // 通用请求函数
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log('API请求URL:', url);
   
   const defaultOptions: RequestInit = {
     headers: {
@@ -17,9 +14,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
 
   try {
-    console.log('发送API请求到:', url);
     const response = await fetch(url, defaultOptions);
-    console.log('API响应状态:', response.status);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -28,15 +23,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
     
     const data = await response.json();
-    console.log('=== API响应数据详情 ===');
-    console.log('完整响应:', JSON.stringify(data, null, 2));
-    console.log('数据类型:', typeof data);
-    console.log('是否有items字段:', 'items' in data);
-    if ('items' in data) {
-      console.log('items数组长度:', data.items.length);
-      console.log('第一个item:', data.items[0]);
-    }
-    console.log('=======================');
+
     return data;
   } catch (error) {
     console.error('API请求失败:', error);

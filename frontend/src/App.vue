@@ -2,8 +2,7 @@
   <div>
     <NavBar />
     <main class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
-      <LoadingSpinner v-if="isLoading" />
-      <ErrorMessage v-else-if="hasError" @retry="retryLoading" />
+      <ErrorMessage v-if="hasError" @retry="retryLoading" />
       <template v-else>
         <CoverHero :latest="latestItem" />
         <Timeline
@@ -51,7 +50,6 @@
   import Toast from './components/Toast.vue';
   import ImageMarquee from './components/ImageMarquee.vue';
   import MusicPlayer from './components/MusicPlayer.vue';
-  import LoadingSpinner from './components/LoadingSpinner.vue';
   import ErrorMessage from './components/ErrorMessage.vue';
   import { useTimelineStore } from './stores/timeline';
   import { useEffectsStore } from './stores/effects';
@@ -66,20 +64,10 @@
   const items = computed(() => timelineStore.timelineItems);
   const latestItem = computed(() => items.value?.[0] ?? null);
   
-  console.log('App.vue中的items:', items.value);
-  console.log('timelineStore.$state:', timelineStore.$state);
-  console.log('timelineStore.timelineItems getter:', timelineStore.timelineItems);
-  
-  // 计算是否正在加载
-  const isLoading = computed(() => 
-    timelineStore.loading || settings.loading
-  );
-  
   // 计算是否有错误
   const hasError = computed(() => 
     timelineStore.error || settings.error
   );
-  
   
   // 重试加载数据
   const retryLoading = async () => {
@@ -133,41 +121,14 @@
 
     // 添加调试功能
     if (typeof window !== 'undefined') {
-      (window as any).debugScroll = () => {
-        console.log('=== 滚动状态调试 ===');
-        console.log(
-          'document.documentElement.style.overflow:',
-          document.documentElement.style.overflow,
-        );
-        console.log('document.body.style.overflow:', document.body.style.overflow);
-        console.log(
-          'document.documentElement.style.overflowX:',
-          document.documentElement.style.overflowX,
-        );
-        console.log(
-          'document.documentElement.style.overflowY:',
-          document.documentElement.style.overflowY,
-        );
-        console.log('document.body.style.overflowX:', document.body.style.overflowX);
-        console.log('document.body.style.overflowY:', document.body.style.overflowY);
-        console.log('window.innerHeight:', window.innerHeight);
-        console.log(
-          'document.documentElement.scrollHeight:',
-          document.documentElement.scrollHeight,
-        );
-        console.log('document.body.scrollHeight:', document.body.scrollHeight);
-        console.log('document.documentElement.scrollTop:', document.documentElement.scrollTop);
-        console.log('document.body.scrollTop:', document.body.scrollTop);
-      };
+      (window as any).debugScroll = () => {};
 
       // 添加修复滚动条的函数
       (window as any).fixScroll = () => {
-        console.log('=== 修复滚动条 ===');
         document.documentElement.style.overflowX = 'hidden';
         document.documentElement.style.overflowY = 'auto';
         document.body.style.overflowX = 'hidden';
         document.body.style.overflowY = 'hidden';
-        console.log('已修复滚动设置');
       };
     }
   });

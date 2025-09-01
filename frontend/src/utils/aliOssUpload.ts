@@ -239,7 +239,6 @@ class AliOssUpload {
       }
       return await Promise.all(uploadQueue);
     } catch (error: any) {
-      console.log(error.message);
     }
   };
 }

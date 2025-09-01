@@ -79,43 +79,28 @@
 
   // 音频控制函数
   const playAudio = () => {
-    console.log('playAudio 被调用', {
-      audioRef: !!audioRef.value,
-      hasUserInteracted: hasUserInteracted.value,
-      isPlaying: isPlaying.value,
-    });
-
     if (audioRef.value && hasUserInteracted.value) {
       // 确保音频不是静音的
       audioRef.value.muted = false;
 
       audioRef.value
         .play()
-        .then(() => {
-          console.log('音频播放成功');
-        })
+        .then(() => {})
         .catch((error) => {
           console.error('播放失败:', error);
           // 如果播放失败，尝试静音播放然后取消静音
           if (error.name === 'NotAllowedError') {
-            console.log('尝试静音播放然后取消静音');
             audioRef.value!.muted = true;
             audioRef
               .value!.play()
               .then(() => {
                 audioRef.value!.muted = false;
-                console.log('静音播放成功，已取消静音');
               })
               .catch((mutedError) => {
                 console.error('静音播放也失败:', mutedError);
               });
           }
         });
-    } else {
-      console.log('播放条件不满足:', {
-        audioRef: !!audioRef.value,
-        hasUserInteracted: hasUserInteracted.value,
-      });
     }
   };
 
@@ -232,15 +217,15 @@
 
     // 添加音频加载事件监听
     audioRef.value.addEventListener('loadstart', () => {
-      console.log('音频开始加载');
+
     });
 
     audioRef.value.addEventListener('canplay', () => {
-      console.log('音频可以播放');
+
     });
 
     audioRef.value.addEventListener('canplaythrough', () => {
-      console.log('音频完全加载完成');
+
     });
 
     audioRef.value.addEventListener('error', (e) => {
@@ -263,7 +248,7 @@
 
     // 添加点击事件监听器，确保用户交互后可以播放
     const handleDocumentClick = () => {
-      console.log('文档点击事件触发，设置用户交互标志');
+
       hasUserInteracted.value = true;
       document.removeEventListener('click', handleDocumentClick);
     };
@@ -274,7 +259,7 @@
     const handleScroll = () => {
       // 移动端不自动播放，需要用户手动交互
       if (window.innerWidth <= 768) {
-        console.log('移动端检测到，不自动播放音乐');
+
         // 移除滚动监听器，避免重复触发
         window.removeEventListener('scroll', handleScroll);
         return;
@@ -282,7 +267,7 @@
 
       // 检查设置是否开启自动播放
       if (!settings.musicAutoPlay) {
-        console.log('音乐自动播放已关闭，不自动播放');
+
         // 移除滚动监听器，避免重复触发
         window.removeEventListener('scroll', handleScroll);
         return;
@@ -290,7 +275,7 @@
 
       if (!hasUserInteracted.value) {
         hasUserInteracted.value = true;
-        console.log('桌面端滚动检测到，音频已启用，开始播放');
+
         // 自动开始播放
         isPlaying.value = true;
         playAudio();

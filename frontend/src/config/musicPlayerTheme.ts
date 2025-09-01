@@ -28,12 +28,12 @@ export function getMusicPlayerColors(isDarkTheme: boolean) {
     ? MUSIC_PLAYER_THEME.primary.dark
     : MUSIC_PLAYER_THEME.primary.light;
 
-  console.log(`Theme is dark: ${isDarkTheme}, Primary color: ${primaryColor}`);
+
 
   // 直接根据主题模式生成颜色系统，而不是根据主色调
   if (isDarkTheme) {
     // 暗黑主题 - 生成暗黑系统
-    console.log('Generating dark color system for dark theme');
+
     return {
       background: '#1e293b',
       border: '#374151',
@@ -52,7 +52,7 @@ export function getMusicPlayerColors(isDarkTheme: boolean) {
     };
   } else {
     // 亮色主题 - 生成亮色系统
-    console.log('Generating light color system for light theme');
+
     return {
       background: '#f8fafc',
       border: '#e2e8f0',

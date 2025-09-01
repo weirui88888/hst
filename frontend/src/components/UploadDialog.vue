@@ -505,10 +505,7 @@
             aspectRatio,
           } as any;
         }
-        console.log('[UploadDialog] parsed aspectRatio:', aspectRatio, 'raw:', {
-          width: img.width,
-          height: img.height,
-        });
+
       };
       img.src = mediaItem.url;
 
@@ -535,8 +532,7 @@
               aspectRatio,
             } as any;
           }
-          console.log('[UploadDialog] OSS 上传返回:', uploadRes);
-          if (ossUrl) console.log('[UploadDialog] 图片真实URL:', ossUrl);
+
         } catch (err: any) {
           console.error('[UploadDialog] OSS 上传失败:', err?.message || err);
           (window as any).$toast?.error('图片上传失败，请重试');
@@ -640,7 +636,7 @@
     // 显示成功提示
     (window as any).$toast?.success(UI_TEXTS.toast.saveSuccess);
     // 暂不自动关闭弹窗，并打印完整提交对象，便于查看
-    console.log('[UploadDialog] submit payload:', newItem);
+
   }
 
   // 计算预览图片样式（aspect-ratio容器）
@@ -654,7 +650,7 @@
         ratio = `${parts[0]}/${parts[1]}`;
       }
     }
-    console.log('[UploadDialog] container aspect-ratio:', ratio);
+
     return { aspectRatio: ratio, width: '100%' } as any;
   });
 

@@ -83,7 +83,6 @@ export const useSettingsStore = defineStore('settings', {
         this.error = error instanceof Error ? error.message : '加载配置失败';
         
         // 如果API失败，使用本地存储的数据
-        console.log('使用本地存储的配置数据');
       } finally {
         this.loading = false;
       }

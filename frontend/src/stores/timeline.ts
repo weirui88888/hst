@@ -21,7 +21,6 @@ export const useTimelineStore = defineStore('timeline', {
   
   getters: {
     timelineItems(state) {
-      console.log('timelineItems getter被调用，state.items:', state.items);
       return state.items;
     },
     
@@ -43,10 +42,6 @@ export const useTimelineStore = defineStore('timeline', {
           timelineAPI.getPinned()
         ]);
         
-        console.log('API返回的数据:', timelineResponse);
-        console.log('API返回的items数组:', timelineResponse.items);
-        console.log('API返回的items长度:', timelineResponse.items?.length);
-        
         // 将API返回的items中的date字段转换为Date对象
         const itemsWithDateObjects = (timelineResponse.items || []).map(item => ({
           ...item,
@@ -55,14 +50,12 @@ export const useTimelineStore = defineStore('timeline', {
         
         this.items = itemsWithDateObjects;
         this.pinnedId = pinnedResponse.pinnedId;
-        console.log('Store中的数据:', this.items);
-        console.log('Store中数据的长度:', this.items.length);
+
       } catch (error) {
         console.error('加载时间轴数据失败:', error);
         this.error = error instanceof Error ? error.message : '加载数据失败';
         
         // 如果API失败，使用本地演示数据作为后备
-        console.log('API加载失败，使用演示数据');
         this.loadDemoData();
       } finally {
         this.loading = false;
@@ -71,7 +64,6 @@ export const useTimelineStore = defineStore('timeline', {
     
     // 加载演示数据（作为后备）
     loadDemoData() {
-      console.log('开始加载演示数据');
       const baseDate = new Date();
       const demo: TimelineItem[] = [];
       const aspectRatios = ['16/9', '4/3', '1/1', '3/2', '2/1', '5/4', '3/4', '2/3'];
@@ -148,7 +140,6 @@ export const useTimelineStore = defineStore('timeline', {
       
       this.items = demo;
       this.pinnedId = null;
-      console.log('演示数据加载完成，共', demo.length, '个项目');
     },
     
     // 添加时间轴项目
