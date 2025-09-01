@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm install -g pnpm@9
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # 生产阶段
 FROM base AS production
@@ -26,5 +26,5 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-EXPOSE 3000
+EXPOSE 6766
 CMD ["pnpm", "start"]

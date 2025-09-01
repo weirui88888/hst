@@ -13,6 +13,16 @@ import timelineRoutes from './routes/timeline.js';
 // 加载环境变量
 dotenv.config();
 
+// 调试信息：打印环境变量
+console.log('🔧 环境变量加载情况：');
+console.log('📡 PORT:', process.env.PORT);
+console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🗄️ MONGODB_URI:', process.env.MONGODB_URI ? '已设置' : '未设置');
+console.log('🎨 FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('⏱️ RATE_LIMIT_WINDOW_MS:', process.env.RATE_LIMIT_WINDOW_MS);
+console.log('📊 RATE_LIMIT_MAX_REQUESTS:', process.env.RATE_LIMIT_MAX_REQUESTS);
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
