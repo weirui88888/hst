@@ -7,8 +7,33 @@ on:
     branches: [ main ]
 
 jobs:
-  build-frontend:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      backend-changed: ${{ steps.changes.outputs.backend }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Detect changes
+      id: changes
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          frontend:
+            - 'frontend/**'
+            - 'frontend/**/*'
+          backend:
+            - 'backend/**'
+            - 'backend/**/*'
+
+  build-frontend:
+    needs: [detect-changes]
+    runs-on: ubuntu-latest
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -54,7 +79,9 @@ jobs:
         path: frontend/dist
 
   build-backend:
+    needs: [detect-changes]
     runs-on: ubuntu-latest
+    if: needs.detect-changes.outputs.backend-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -67,9 +94,11 @@ jobs:
         path: backend/
 
   build-frontend-docker:
-    needs: [build-frontend]
+    needs: [detect-changes, build-frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' && 
+      needs.detect-changes.outputs.frontend-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -104,9 +133,11 @@ jobs:
         path: hst-frontend.tar
 
   build-backend-docker:
-    needs: [build-backend]
+    needs: [detect-changes, build-backend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' && 
+      needs.detect-changes.outputs.backend-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -156,9 +187,12 @@ jobs:
         path: hst-backend.tar
 
   deploy-to-server:
-    needs: [build-frontend-docker, build-backend-docker]
+    needs: [detect-changes, build-frontend-docker, build-backend-docker]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: |
+      github.ref == 'refs/heads/main' && 
+      (needs.detect-changes.outputs.frontend-changed == 'true' || 
+       needs.detect-changes.outputs.backend-changed == 'true')
     
     steps:
     - name: Download frontend tar artifact
@@ -166,12 +200,14 @@ jobs:
       with:
         name: hst-frontend-tar
         path: ./
+        if-no-files-found: ignore
         
     - name: Download backend tar artifact
       uses: actions/download-artifact@v4
       with:
         name: hst-backend-tar
         path: ./
+        if-no-files-found: ignore
         
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.7
@@ -196,9 +232,16 @@ jobs:
           # 删除旧镜像
           docker rmi hst-frontend:latest hst-backend:latest || true
           
-          # 加载新镜像
-          docker load -i ~/hst-frontend.tar
-          docker load -i ~/hst-backend.tar
+          # 加载新镜像（如果存在）
+          if [ -f ~/hst-frontend.tar ]; then
+            echo "🔄 加载前端镜像..."
+            docker load -i ~/hst-frontend.tar
+          fi
+          
+          if [ -f ~/hst-backend.tar ]; then
+            echo "🔄 加载后端镜像..."
+            docker load -i ~/hst-backend.tar
+          fi
           
           # 启动后端容器（连接到网络）
           docker run -d -p 6766:6766 --name hst-backend hst-backend:latest
