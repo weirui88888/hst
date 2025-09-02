@@ -22,7 +22,6 @@ console.log('🎨 FRONTEND_URL:', process.env.FRONTEND_URL);
 console.log('⏱️ RATE_LIMIT_WINDOW_MS:', process.env.RATE_LIMIT_WINDOW_MS);
 console.log('📊 RATE_LIMIT_MAX_REQUESTS:', process.env.RATE_LIMIT_MAX_REQUESTS);
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -30,24 +29,26 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS 配置
-const allowedOrigins = process.env.FRONTEND_URL 
+const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
   : ['http://localhost:5173'];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // 允许没有 origin 的请求（如移动端应用、Postman等）
-    if (!origin) return callback(null, true);
-    
-    // 检查是否在允许列表中，或者是否设置为通配符
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // 允许没有 origin 的请求（如移动端应用、Postman等）
+      if (!origin) return callback(null, true);
+
+      // 检查是否在允许列表中，或者是否设置为通配符
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+  })
+);
 
 // 请求限流
 // const limiter = rateLimit({
@@ -66,9 +67,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // 数据库连接
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hst-app';
+    const mongoURI =
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/hst-app';
     await mongoose.connect(mongoURI);
-
   } catch (error) {
     console.error('❌ MongoDB 连接失败:', error.message);
     process.exit(1);
@@ -81,8 +82,8 @@ app.use('/api/timeline', timelineRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -103,16 +104,16 @@ app.get('/api', (req, res) => {
 
 // 404 处理
 app.use('*', (req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: '接口不存在',
-    path: req.originalUrl 
+    path: req.originalUrl
   });
 });
 
 // 错误处理中间件
 app.use((err, req, res, next) => {
   console.error('服务器错误:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: '服务器内部错误',
     message: process.env.NODE_ENV === 'development' ? err.message : '请稍后重试'
   });
@@ -121,13 +122,10 @@ app.use((err, req, res, next) => {
 // 启动服务器
 const startServer = async () => {
   await connectDB();
-  
-  app.listen(PORT, () => {
 
-  });
+  app.listen(PORT, () => {});
 };
 
 startServer().catch(console.error);
 
 export default app;
-

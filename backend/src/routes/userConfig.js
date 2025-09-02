@@ -1,5 +1,8 @@
 import express from 'express';
-import { getUserConfig, updateUserConfig } from '../controllers/userConfigController.js';
+import {
+  getUserConfig,
+  updateUserConfig
+} from '../controllers/userConfigController.js';
 
 const router = express.Router();
 
@@ -10,4 +13,3 @@ router.get('/config', getUserConfig);
 router.post('/config', updateUserConfig);
 
 export default router;
-

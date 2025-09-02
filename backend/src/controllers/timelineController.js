@@ -90,10 +90,7 @@ export const createTimelineItem = async (req, res) => {
 
     // 如果设置为置顶，先取消其他置顶项目
     if (isPinned) {
-      await TimelineItem.updateMany(
-        { isPinned: true },
-        { isPinned: false }
-      );
+      await TimelineItem.updateMany({ isPinned: true }, { isPinned: false });
     }
 
     const timelineItem = new TimelineItem({
@@ -144,10 +141,7 @@ export const updateTimelineItem = async (req, res) => {
 
     // 如果设置为置顶，先取消其他置顶项目
     if (isPinned && !timelineItem.isPinned) {
-      await TimelineItem.updateMany(
-        { isPinned: true },
-        { isPinned: false }
-      );
+      await TimelineItem.updateMany({ isPinned: true }, { isPinned: false });
     }
 
     // 更新字段
@@ -225,4 +219,3 @@ export const deleteTimelineItem = async (req, res) => {
     });
   }
 };
-

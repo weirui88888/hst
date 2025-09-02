@@ -1,10 +1,10 @@
 import express from 'express';
-import { 
-  getTimelineItems, 
-  getPinnedItem, 
-  createTimelineItem, 
-  updateTimelineItem, 
-  deleteTimelineItem 
+import {
+  getTimelineItems,
+  getPinnedItem,
+  createTimelineItem,
+  updateTimelineItem,
+  deleteTimelineItem
 } from '../controllers/timelineController.js';
 
 const router = express.Router();
@@ -25,4 +25,3 @@ router.put('/items/:id', updateTimelineItem);
 router.delete('/items/:id', deleteTimelineItem);
 
 export default router;
-
