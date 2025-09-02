@@ -14,7 +14,14 @@
       </template>
     </main>
     <!-- 全宽横向滚动组件（直接使用组件内置的全宽贴边功能） -->
-    <ImageMarquee :height="180" :gap="6" :speed="100" :hoverPause="true" :fullBleed="true" />
+    <ImageMarquee
+      v-if="!hasError && items.length > 0"
+      :height="180"
+      :gap="6"
+      :speed="100"
+      :hoverPause="true"
+      :fullBleed="true"
+    />
 
     <!-- 故事延续文字区域 -->
     <section
@@ -28,7 +35,9 @@
         >
           {{ settings.epilogueMainTitle || UI_TEXTS.storyContinuation.title }}
         </h2>
-        <p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed fade-in-text">
+        <p
+          class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed fade-in-text"
+        >
           {{ settings.epilogueSubTitle || UI_TEXTS.storyContinuation.subtitle }}
         </p>
       </div>
@@ -41,122 +50,124 @@
 </template>
 
 <script setup lang="ts">
-  // @ts-nocheck
-  import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
-  import NavBar from './components/NavBar.vue';
-  import CoverHero from './components/CoverHero.vue';
-  import Timeline from './components/Timeline.vue';
-  import BackToTop from './components/BackToTop.vue';
-  import Toast from './components/Toast.vue';
-  import ImageMarquee from './components/ImageMarquee.vue';
-  import MusicPlayer from './components/MusicPlayer.vue';
-  import ErrorMessage from './components/ErrorMessage.vue';
-  import { useTimelineStore } from './stores/timeline';
-  import { useEffectsStore } from './stores/effects';
-  import { useSettingsStore } from './stores/settings';
-  import { UI_TEXTS } from './config/texts';
+// @ts-nocheck
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import NavBar from "./components/NavBar.vue";
+import CoverHero from "./components/CoverHero.vue";
+import Timeline from "./components/Timeline.vue";
+import BackToTop from "./components/BackToTop.vue";
+import Toast from "./components/Toast.vue";
+import ImageMarquee from "./components/ImageMarquee.vue";
+import MusicPlayer from "./components/MusicPlayer.vue";
+import ErrorMessage from "./components/ErrorMessage.vue";
+import { useTimelineStore } from "./stores/timeline";
+import { useEffectsStore } from "./stores/effects";
+import { useSettingsStore } from "./stores/settings";
+import { UI_TEXTS } from "./config/texts";
+import { debugLog } from "./utils/vconsole";
 
-  const timelineStore = useTimelineStore();
-  const effects = useEffectsStore();
-  const settings = useSettingsStore();
-  
-  // 使用computed响应式获取数据
-  const items = computed(() => timelineStore.timelineItems);
-  const latestItem = computed(() => items.value?.[0] ?? null);
-  
-  // 计算是否有错误
-  const hasError = computed(() => 
-    timelineStore.error || settings.error
-  );
+const timelineStore = useTimelineStore();
+const effects = useEffectsStore();
+const settings = useSettingsStore();
 
-  // 设置页面标题
-  const setPageTitle = (title?: string) => {
-    const pageTitle = title || settings.siteTitle || UI_TEXTS.nav.defaultTitle;
-    document.title = pageTitle;
-  };
-  
-  // 重试加载数据
-  const retryLoading = async () => {
-    timelineStore.clearError();
-    settings.clearError();
-    try {
-      await Promise.all([
-        timelineStore.loadTimelineData(),
-        settings.loadUserConfig()
-      ]);
-      // 重新设置页面标题
-      setPageTitle();
-    } catch (error) {
-      console.error('重试加载数据失败:', error);
-    }
-  };
+// 使用computed响应式获取数据
+const items = computed(() => timelineStore.timelineItems);
+const latestItem = computed(() => items.value?.[0] ?? null);
 
-  // 滚动触发动画相关
-  const storySection = ref<HTMLElement>();
-  const isVisible = ref(false);
-  let observer: IntersectionObserver | null = null;
+// 计算是否有错误
+const hasError = computed(() => timelineStore.error || settings.error);
 
-  onMounted(async () => {
-    // 加载数据
-    try {
-      await Promise.all([
-        timelineStore.loadTimelineData(),
-        settings.loadUserConfig()
-      ]);
-      // 设置页面标题
-      setPageTitle();
-    } catch (error) {
-      console.error('加载数据失败:', error);
-    }
+// 设置页面标题
+const setPageTitle = (title?: string) => {
+  const pageTitle = title || settings.siteTitle || UI_TEXTS.nav.defaultTitle;
+  document.title = pageTitle;
+};
 
-    if (storySection.value) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              isVisible.value = true;
-              // 一旦触发就停止观察，避免重复触发
-              observer?.unobserve(entry.target);
-            }
-          });
-        },
-        {
-          threshold: 0.3, // 当30%的元素可见时触发
-          rootMargin: '0px 0px -50px 0px', // 提前50px触发
-        },
-      );
+// 重试加载数据
+const retryLoading = async () => {
+  timelineStore.clearError();
+  settings.clearError();
+  try {
+    await Promise.all([
+      timelineStore.loadTimelineData(),
+      settings.loadUserConfig(),
+    ]);
+    // 重新设置页面标题
+    setPageTitle();
+  } catch (error) {
+    console.error("重试加载数据失败:", error);
+  }
+};
 
-      observer.observe(storySection.value);
-    }
+// 滚动触发动画相关
+const storySection = ref<HTMLElement>();
+const isVisible = ref(false);
+let observer: IntersectionObserver | null = null;
 
-    // 添加调试功能
-    if (typeof window !== 'undefined') {
-      (window as any).debugScroll = () => {};
+onMounted(async () => {
+  // 加载数据
+  try {
+    await Promise.all([
+      timelineStore.loadTimelineData(),
+      settings.loadUserConfig(),
+    ]);
+    // 设置页面标题
+    setPageTitle();
+  } catch (error) {
+    console.error("加载数据失败:", error);
+  }
 
-      // 添加修复滚动条的函数
-      (window as any).fixScroll = () => {
-        document.documentElement.style.overflowX = 'hidden';
-        document.documentElement.style.overflowY = 'auto';
-        document.body.style.overflowX = 'hidden';
-        document.body.style.overflowY = 'hidden';
-      };
-    }
-  });
+  if (storySection.value) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            isVisible.value = true;
+            // 一旦触发就停止观察，避免重复触发
+            observer?.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.3, // 当30%的元素可见时触发
+        rootMargin: "0px 0px -50px 0px", // 提前50px触发
+      },
+    );
 
-  // 监听站点标题变化，自动更新页面标题
-  watch(() => settings.siteTitle, (newTitle) => {
+    observer.observe(storySection.value);
+  }
+
+  // 添加调试功能
+  if (typeof window !== "undefined") {
+    (window as any).debugScroll = () => {};
+
+    // 添加修复滚动条的函数
+    (window as any).fixScroll = () => {
+      document.documentElement.style.overflowX = "hidden";
+      document.documentElement.style.overflowY = "auto";
+      document.body.style.overflowX = "hidden";
+      document.body.style.overflowY = "hidden";
+    };
+  }
+});
+
+// 监听站点标题变化，自动更新页面标题
+watch(
+  () => settings.siteTitle,
+  (newTitle) => {
     setPageTitle(newTitle);
-  });
+  },
+);
 
-  onUnmounted(() => {
-    if (observer) {
-      observer.disconnect();
-    }
-  });
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect();
+  }
+});
 </script>
 
 <style>
-  /* .vc-container .vc-weekday-1, .vc-container .vc-weekday-7  {
+/* .vc-container .vc-weekday-1, .vc-container .vc-weekday-7  {
   color: red;
 }
 
@@ -164,7 +175,7 @@
   background-color: red;
 } */
 
-  /* .vc-container.vc-dark,.vc-container.vc-dark .vc-arrow{
+/* .vc-container.vc-dark,.vc-container.vc-dark .vc-arrow{
   @apply bg-neutral-900;
  }
  .vc-container.vc-dark .vc-title{
@@ -185,71 +196,71 @@
   background-color: var(--site-main-color);
  } */
 
-  /* 故事延续文字动画样式 */
-  .story-section {
-    opacity: 0;
-    transform: translateY(30px);
-    transition:
-      opacity 1s ease-out,
-      transform 1s ease-out;
-  }
+/* 故事延续文字动画样式 */
+.story-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 1s ease-out,
+    transform 1s ease-out;
+}
 
-  .story-section.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.story-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
+.typewriter-text {
+  opacity: 0;
+  transform: scale(2);
+  transition:
+    opacity 1.5s ease-out 1s,
+    transform 1.5s ease-out 1s;
+}
+
+.story-section.visible .typewriter-text {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fade-in-text {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 1s ease-out 0.5s,
+    transform 1s ease-out 0.5s;
+}
+
+.story-section.visible .fade-in-text {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 暗黑主题适配 */
+.dark .typewriter-text {
+  color: #f8fafc;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
   .typewriter-text {
-    opacity: 0;
-    transform: scale(2);
-    transition:
-      opacity 1.5s ease-out 1s,
-      transform 1.5s ease-out 1s;
+    font-size: 1.875rem;
   }
+}
 
-  .story-section.visible .typewriter-text {
-    opacity: 1;
-    transform: scale(1);
-  }
-
+/* 减少动画偏好设置 */
+@media (prefers-reduced-motion: reduce) {
+  .story-section,
+  .typewriter-text,
   .fade-in-text {
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-      opacity 1s ease-out 0.5s,
-      transform 1s ease-out 0.5s;
-  }
-
-  .story-section.visible .fade-in-text {
+    transition: none;
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+    max-width: 100%;
   }
 
-  /* 暗黑主题适配 */
-  .dark .typewriter-text {
-    color: #f8fafc;
+  .typewriter-text::after {
+    display: none;
   }
-
-  /* 响应式调整 */
-  @media (max-width: 768px) {
-    .typewriter-text {
-      font-size: 1.875rem;
-    }
-  }
-
-  /* 减少动画偏好设置 */
-  @media (prefers-reduced-motion: reduce) {
-    .story-section,
-    .typewriter-text,
-    .fade-in-text {
-      transition: none;
-      opacity: 1;
-      transform: none;
-      max-width: 100%;
-    }
-
-    .typewriter-text::after {
-      display: none;
-    }
-  }
+}
 </style>

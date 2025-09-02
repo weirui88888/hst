@@ -210,9 +210,9 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.ref == 'refs/heads/main' && 
-      ((needs.detect-changes.outputs.frontend-changed == 'true' && needs.build-frontend-docker.result == 'success') || 
-       (needs.detect-changes.outputs.backend-changed == 'true' && needs.build-backend-docker.result == 'success') ||
-       (needs.detect-changes.outputs.deploy-changed == 'true' && (needs.build-frontend-docker.result == 'success' || needs.build-backend-docker.result == 'success')))
+      ((needs.detect-changes.outputs.frontend-changed == 'true' && (needs.build-frontend-docker.result == 'success' || needs.build-frontend-docker.result == 'skipped')) || 
+       (needs.detect-changes.outputs.backend-changed == 'true' && (needs.build-backend-docker.result == 'success' || needs.build-backend-docker.result == 'skipped')) ||
+       (needs.detect-changes.outputs.deploy-changed == 'true' && ((needs.build-frontend-docker.result == 'success' || needs.build-frontend-docker.result == 'skipped') || (needs.build-backend-docker.result == 'success' || needs.build-backend-docker.result == 'skipped'))))
     continue-on-error: false
     
     steps:
@@ -224,7 +224,6 @@ jobs:
       with:
         name: hst-frontend-tar
         path: ./
-        if-no-files-found: ignore
         
     - name: Download backend tar artifact
       if: |
@@ -234,7 +233,6 @@ jobs:
       with:
         name: hst-backend-tar
         path: ./
-        if-no-files-found: ignore
         
     - name: Check downloaded artifacts
       run: |

@@ -3,10 +3,28 @@
     <header
       class="sticky top-0 z-50 backdrop-blur dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800"
     >
-      <div class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <h1 class="text-lg md:text-xl lg:text-2xl font-semibold text-neutral-800 dark:text-neutral-200">
-          {{ settings.siteTitle || UI_TEXTS.nav.defaultTitle }}
-        </h1>
+      <div
+        class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <h1
+            class="text-lg md:text-xl lg:text-2xl font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer select-none"
+            @click="handleTitleClick"
+            :title="
+              debugClickCount > 0
+                ? `再点击 ${5 - debugClickCount} 次开启调试模式`
+                : ''
+            "
+          >
+            {{ settings.siteTitle || UI_TEXTS.nav.defaultTitle }}
+          </h1>
+          <!-- 调试模式指示器 -->
+          <div
+            v-if="isDebugMode"
+            class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+            title="调试模式已开启"
+          ></div>
+        </div>
         <div class="flex items-center gap-3">
           <AutoPlayButton />
           <button
@@ -28,7 +46,13 @@
                 d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
               />
             </svg>
-            <svg v-else class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              v-else
+              class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -42,7 +66,12 @@
             @click="openForm"
             :title="UI_TEXTS.nav.add"
           >
-            <svg class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -56,7 +85,12 @@
             @click="openSettings"
             :title="UI_TEXTS.nav.settings"
           >
-            <svg class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="w-4 h-4 md:w-4 md:h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -99,49 +133,87 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
-  import { useThemeStore } from '../stores/theme';
-  import { useEffectsStore } from '../stores/effects';
-  import { useSettingsStore } from '../stores/settings';
-  import UploadDialog from './UploadDialog.vue';
-  import SettingsPanel from './SettingsPanel.vue';
-  import AutoPlayButton from './AutoPlayButton.vue';
-  import { UI_TEXTS } from '../config/texts';
-  import { useToast } from '../utils/toast';
+import { computed, ref } from "vue";
+import { useThemeStore } from "../stores/theme";
+import { useEffectsStore } from "../stores/effects";
+import { useSettingsStore } from "../stores/settings";
+import UploadDialog from "./UploadDialog.vue";
+import SettingsPanel from "./SettingsPanel.vue";
+import AutoPlayButton from "./AutoPlayButton.vue";
+import { UI_TEXTS } from "../config/texts";
+import { useToast } from "../utils/toast";
+import { toggleVConsole, debugLog, getDebugMode } from "../utils/vconsole";
 
-  const settings = useSettingsStore();
+const settings = useSettingsStore();
 
-  const theme = useThemeStore();
-  const title = computed(() => (theme.mode === 'dark' ? '切换到浅色' : '切换到深色'));
-  const toggle = () => theme.toggleTheme();
+const theme = useThemeStore();
+const title = computed(() =>
+  theme.mode === "dark" ? "切换到浅色" : "切换到深色",
+);
+const toggle = () => theme.toggleTheme();
 
-  const isOpen = ref(false);
-  const openForm = () => (isOpen.value = true);
+// 调试模式相关
+const debugClickCount = ref(0);
+const debugClickTimer = ref<NodeJS.Timeout | null>(null);
+const isDebugMode = ref(getDebugMode());
 
-  const effects = useEffectsStore();
+const handleTitleClick = () => {
+  debugClickCount.value++;
 
-  const settingsOpen = ref(false);
-  const openSettings = () => {
-    settingsOpen.value = !settingsOpen.value;
-  };
+  // 清除之前的定时器
+  if (debugClickTimer.value) {
+    clearTimeout(debugClickTimer.value);
+  }
 
-  const updateAnimationsEnabled = (value: boolean) => {
-    effects.setAnimationsEnabled(value);
-  };
+  // 如果点击了5次，开启调试模式
+  if (debugClickCount.value >= 5) {
+    toggleVConsole();
+    isDebugMode.value = getDebugMode();
 
-  const toast = useToast();
-
-  const handleSettingsPanelChange = (newValue: boolean) => {
-    // 当设置面板关闭时，如果有未保存的更改，则调用API更新
-    if (!newValue && settings.hasUnsavedChanges) {
-      settings.updateUserConfig()
-        .then(() => {
-          // 配置更新成功，显示toast提示
-          toast.success(UI_TEXTS.toast.configUpdated);
-        })
-        .catch(console.error);
+    if (isDebugMode.value) {
+      debugLog.success("🐛 调试模式已开启！");
+      toast.success("调试模式已开启");
+    } else {
+      debugLog.info("🔚 调试模式已关闭");
+      toast.info("调试模式已关闭");
     }
-  };
+
+    debugClickCount.value = 0;
+  } else {
+    // 设置定时器，3秒后重置计数
+    debugClickTimer.value = setTimeout(() => {
+      debugClickCount.value = 0;
+    }, 3000);
+  }
+};
+
+const isOpen = ref(false);
+const openForm = () => (isOpen.value = true);
+
+const effects = useEffectsStore();
+const toast = useToast();
+
+const settingsOpen = ref(false);
+const openSettings = () => {
+  settingsOpen.value = !settingsOpen.value;
+};
+
+const updateAnimationsEnabled = (value: boolean) => {
+  effects.setAnimationsEnabled(value);
+};
+
+const handleSettingsPanelChange = (newValue: boolean) => {
+  // 当设置面板关闭时，如果有未保存的更改，则调用API更新
+  if (!newValue && settings.hasUnsavedChanges) {
+    settings
+      .updateUserConfig()
+      .then(() => {
+        // 配置更新成功，显示toast提示
+        toast.success(UI_TEXTS.toast.configUpdated);
+      })
+      .catch(console.error);
+  }
+};
 </script>
 
 <style scoped></style>

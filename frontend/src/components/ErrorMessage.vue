@@ -1,18 +1,46 @@
 <template>
   <div class="error-message">
     <div class="error-content">
-      <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        class="error-icon"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <p class="error-text">数据加载失败，请检查网络连接</p>
-      <button class="retry-button" @click="$emit('retry')">
-        重试
-      </button>
+      <button class="retry-button" @click="$emit('retry')">重试</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { SITE_MAIN_COLOR } from "../config/siteTheme";
+
+// 创建 hexToRgba 函数用于悬停效果
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "");
+  const bigint = parseInt(
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : normalized,
+    16,
+  );
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // 错误提示组件
 </script>
 
@@ -35,7 +63,7 @@
 .error-icon {
   width: 48px;
   height: 48px;
-  color: #ef4444;
+  color: v-bind(SITE_MAIN_COLOR);
   margin-bottom: 1rem;
 }
 
@@ -47,7 +75,7 @@
 }
 
 .retry-button {
-  background-color: #3b82f6;
+  background-color: v-bind(SITE_MAIN_COLOR);
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -58,15 +86,11 @@
 }
 
 .retry-button:hover {
-  background-color: #2563eb;
+  background-color: v-bind(hexToRgba(SITE_MAIN_COLOR, 0.8));
 }
 
 /* 暗黑主题适配 */
 .dark .error-text {
   color: #9ca3af;
-}
-
-.dark .error-icon {
-  color: #f87171;
 }
 </style>
