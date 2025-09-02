@@ -75,6 +75,15 @@ export const initVConsole = () => {
     console.log("⏰ 当前时间:", new Date().toLocaleString());
     console.log("📱 设备类型:", isMobile() ? "移动端" : "桌面端");
 
+    // 显示滚动速度参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const scrollSpeed = urlParams.get("scrollSpeed");
+    if (scrollSpeed) {
+      console.log("🎯 滚动速度参数:", `${scrollSpeed} 像素/秒`);
+    } else {
+      console.log("🎯 滚动速度参数: 未设置 (使用默认值 50 像素/秒)");
+    }
+
     // 添加全局调试函数
     (window as any).debugInfo = {
       userAgent: navigator.userAgent,
@@ -84,6 +93,7 @@ export const initVConsole = () => {
       timestamp: new Date().toLocaleString(),
       isMobile: isMobile(),
       isDev: isDev(),
+      scrollSpeed: scrollSpeed || "50 (默认)",
     };
 
     return vConsole;

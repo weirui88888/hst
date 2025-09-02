@@ -59,8 +59,27 @@ const getMusicAudio = () => {
   return musicAudio.value;
 };
 
-// 固定滚动速度（像素/秒）
-const SCROLL_SPEED = 50; // 每秒滚动50像素
+// 获取滚动速度参数
+const getScrollSpeed = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const speedParam = urlParams.get("scrollSpeed");
+
+  if (speedParam) {
+    const speed = parseInt(speedParam, 10);
+    // 验证参数有效性，范围在10-200之间
+    if (!isNaN(speed) && speed >= 10 && speed <= 200) {
+      console.log(`🎯 使用URL参数设置的滚动速度: ${speed} 像素/秒`);
+      return speed;
+    } else {
+      console.warn(`⚠️ 无效的滚动速度参数: ${speedParam}，使用默认值`);
+    }
+  }
+
+  return 50; // 默认每秒滚动50像素
+};
+
+// 动态滚动速度
+const SCROLL_SPEED = getScrollSpeed();
 
 // 开始自动播放
 const startAutoPlay = () => {
@@ -93,7 +112,9 @@ const startAutoPlayInternal = () => {
   audio
     .play()
     .then(() => {
-      console.log("🎵 音乐开始播放，页面开始自动滚动");
+      console.log(
+        `🎵 音乐开始播放，页面开始自动滚动 (速度: ${SCROLL_SPEED} 像素/秒)`,
+      );
       // 记录开始时间和初始滚动位置
       autoScrollStartTime.value = Date.now();
       lastScrollTop.value = window.pageYOffset;
