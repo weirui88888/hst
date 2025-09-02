@@ -211,25 +211,79 @@ jobs:
     runs-on: ubuntu-latest
     if: always() && github.ref == 'refs/heads/main'
     outputs:
-      frontend-result: ${{ needs.build-frontend-docker.result }}
-      backend-result: ${{ needs.build-backend-docker.result }}
+      frontend-result: ${{ steps.collect-results.outputs.frontend_result }}
+      backend-result: ${{ steps.collect-results.outputs.backend_result }}
     steps:
     - name: Check build results
       run: |
         echo "Frontend build result: ${{ needs.build-frontend-docker.result }}"
         echo "Backend build result: ${{ needs.build-backend-docker.result }}"
+    - name: Collect results to outputs
+      id: collect-results
+      run: |
+        echo "frontend_result=${{ needs.build-frontend-docker.result }}" >> $GITHUB_OUTPUT
+        echo "backend_result=${{ needs.build-backend-docker.result }}" >> $GITHUB_OUTPUT
+
+  summary-deploy-decision:
+    needs: [detect-changes, ensure-docker-builds]
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main'
+    steps:
+    - name: Decide summary
+      id: decide
+      run: |
+        FRONTEND_CHANGED='${{ needs.detect-changes.outputs.frontend-changed }}'
+        BACKEND_CHANGED='${{ needs.detect-changes.outputs.backend-changed }}'
+        DEPLOY_CHANGED='${{ needs.detect-changes.outputs.deploy-changed }}'
+        FRONTEND_RESULT='${{ needs.ensure-docker-builds.outputs.frontend-result }}'
+        BACKEND_RESULT='${{ needs.ensure-docker-builds.outputs.backend-result }}'
+
+        MSG=""
+        if [ "$FRONTEND_CHANGED" = "true" ] && [ "$FRONTEND_RESULT" = "success" ]; then
+          MSG="${MSG}由于前端发生变动，deploy-to-server 将更新前端。"
+        elif [ "$FRONTEND_CHANGED" = "true" ]; then
+          MSG="${MSG}前端发生变动，但前端镜像未成功构建，部署将跳过前端。"
+        fi
+
+        if [ "$BACKEND_CHANGED" = "true" ] && [ "$BACKEND_RESULT" = "success" ]; then
+          MSG="${MSG}由于后端发生变动，deploy-to-server 将更新后端。"
+        elif [ "$BACKEND_CHANGED" = "true" ]; then
+          MSG="${MSG}后端发生变动，但后端镜像未成功构建，部署将跳过后端。"
+        fi
+
+        if [ "$DEPLOY_CHANGED" = "true" ] && [ -z "$MSG" ]; then
+          if [ "$FRONTEND_RESULT" = "success" ] || [ "$BACKEND_RESULT" = "success" ]; then
+            MSG="由于工作流配置发生变动，deploy-to-server 将基于成功构建的镜像执行部署。"
+          else
+            MSG="工作流配置发生变动，但没有成功构建的镜像可部署。"
+          fi
+        fi
+
+        if [ -z "$MSG" ]; then
+          MSG="没有检测到需要部署的变动。"
+        fi
+
+        echo "message=$MSG" >> $GITHUB_OUTPUT
+
+    - name: Print summary
+      run: echo "${{ steps.decide.outputs.message }}"
 
   deploy-to-server:
     needs: [detect-changes, ensure-docker-builds]
     runs-on: ubuntu-latest
     if: |
-      github.ref == 'refs/heads/main' && 
-      ((needs.detect-changes.outputs.frontend-changed == 'true' && needs.ensure-docker-builds.outputs.frontend-result == 'success') || 
-       (needs.detect-changes.outputs.backend-changed == 'true' && needs.ensure-docker-builds.outputs.backend-result == 'success') ||
-       (needs.detect-changes.outputs.deploy-changed == 'true' && (needs.ensure-docker-builds.outputs.frontend-result == 'success' || needs.ensure-docker-builds.outputs.backend-result == 'success')))
+      github.ref == 'refs/heads/main' &&
+      (needs.ensure-docker-builds.outputs.frontend-result == 'success' || needs.ensure-docker-builds.outputs.backend-result == 'success')
     continue-on-error: false
     
     steps:
+    - name: Debug deploy conditions
+      run: |
+        echo "frontend-changed=${{ needs.detect-changes.outputs.frontend-changed }}"
+        echo "backend-changed=${{ needs.detect-changes.outputs.backend-changed }}"
+        echo "deploy-changed=${{ needs.detect-changes.outputs.deploy-changed }}"
+        echo "ensure.frontend-result=${{ needs.ensure-docker-builds.outputs.frontend-result }}"
+        echo "ensure.backend-result=${{ needs.ensure-docker-builds.outputs.backend-result }}"
     - name: Download frontend tar artifact
       if: |
         needs.detect-changes.outputs.frontend-changed == 'true' || 
