@@ -146,8 +146,27 @@ const startAutoPlayInternal = () => {
     });
 };
 
-// 停止自动播放
+// 停止自动播放（仅停止滚动，音乐继续播放）
+// 当自动滚动到达页面底部时调用，音乐应该继续播放
 const stopAutoPlay = () => {
+  if (scrollInterval.value) {
+    clearInterval(scrollInterval.value);
+    scrollInterval.value = null;
+  }
+
+  // 不再自动暂停音乐，让音乐继续播放
+  // 这样当自动滚动到达底部时，音乐不会停止
+  // const audio = getMusicAudio();
+  // if (audio) {
+  //   audio.pause();
+  // }
+
+  isAutoPlaying.value = false;
+};
+
+// 停止自动播放（用户手动停止）
+// 当用户点击停止按钮或手动滚动时调用，同时停止音乐
+const stopAutoPlayWithMusic = () => {
   if (scrollInterval.value) {
     clearInterval(scrollInterval.value);
     scrollInterval.value = null;
@@ -164,7 +183,7 @@ const stopAutoPlay = () => {
 // 切换自动播放状态
 const toggleAutoPlay = () => {
   if (isAutoPlaying.value) {
-    stopAutoPlay();
+    stopAutoPlayWithMusic(); // 用户手动停止时，同时停止音乐
   } else {
     isAutoPlaying.value = true;
     startAutoPlay();
@@ -195,7 +214,7 @@ const handleUserScroll = () => {
 
   // 如果滚动距离超过阈值，认为是用户手动滚动
   if (scrollDifference > 15) {
-    stopAutoPlay();
+    stopAutoPlayWithMusic(); // 用户手动滚动时，同时停止音乐
     return;
   }
 
@@ -204,7 +223,7 @@ const handleUserScroll = () => {
 
 // 监听页面卸载
 onUnmounted(() => {
-  stopAutoPlay();
+  stopAutoPlayWithMusic(); // 页面卸载时，同时停止音乐
 
   // 清理滚动监听器
   window.removeEventListener("scroll", handleUserScroll);
