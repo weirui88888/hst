@@ -10,6 +10,12 @@
           <h1
             class="text-lg md:text-xl lg:text-2xl font-semibold text-neutral-800 dark:text-neutral-200 cursor-pointer select-none"
             @click="handleTitleClick"
+            @mousedown="onTitlePressStart"
+            @mouseup="onTitlePressEnd"
+            @mouseleave="onTitlePressEnd"
+            @touchstart.passive="onTitlePressStart"
+            @touchend.passive="onTitlePressEnd"
+            @touchcancel.passive="onTitlePressEnd"
             :title="
               debugClickCount > 0
                 ? `再点击 ${5 - debugClickCount} 次开启调试模式`
@@ -62,6 +68,7 @@
             </svg>
           </button>
           <button
+            v-if="showExtraButtons"
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
             @click="openForm"
             :title="UI_TEXTS.nav.add"
@@ -81,6 +88,7 @@
             </svg>
           </button>
           <button
+            v-if="showExtraButtons"
             class="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors border-none"
             @click="openSettings"
             :title="UI_TEXTS.nav.settings"
@@ -214,6 +222,52 @@ const handleSettingsPanelChange = (newValue: boolean) => {
       .catch(console.error);
   }
 };
+
+// ===== 长按标题切换隐藏按钮 =====
+const SHOW_EXTRA_KEY = "hst_show_extra_buttons";
+const getShowExtraButtons = () => {
+  try {
+    const saved = localStorage.getItem(SHOW_EXTRA_KEY);
+    return saved === "1";
+  } catch {
+    return false;
+  }
+};
+const showExtraButtons = ref<boolean>(getShowExtraButtons());
+
+let longPressTimer: number | null = null;
+const LONG_PRESS_MS = 5000; // 5秒
+
+function clearLongPressTimer() {
+  if (longPressTimer !== null) {
+    window.clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
+
+function onTitlePressStart() {
+  clearLongPressTimer();
+  longPressTimer = window.setTimeout(() => {
+    // 长按8秒后切换显示/隐藏，并持久化到本地
+    if (showExtraButtons.value) {
+      showExtraButtons.value = false;
+      try {
+        localStorage.removeItem(SHOW_EXTRA_KEY);
+      } catch {}
+      toast.info("已隐藏更多按钮");
+    } else {
+      showExtraButtons.value = true;
+      try {
+        localStorage.setItem(SHOW_EXTRA_KEY, "1");
+      } catch {}
+      toast.success("已解锁更多按钮");
+    }
+  }, LONG_PRESS_MS);
+}
+
+function onTitlePressEnd() {
+  clearLongPressTimer();
+}
 </script>
 
 <style scoped></style>
