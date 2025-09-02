@@ -226,11 +226,7 @@ class AliOssUpload {
         directory,
         randomName,
       });
-      const res = await ossClient.multipartUpload(
-        uploadPath,
-        file,
-        uploadOptions as MultipartUploadOptions,
-      );
+      const res = await ossClient.put(uploadPath, file, uploadOptions);
       const result = this.domain
         ? {
             ossSourceUrl: `${this.domain}${res.name}`,
