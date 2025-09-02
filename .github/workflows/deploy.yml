@@ -7,38 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      frontend-changed: ${{ steps.changes.outputs.frontend }}
-      backend-changed: ${{ steps.changes.outputs.backend }}
-      deploy-changed: ${{ steps.changes.outputs.deploy }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: Detect changes
-      id: changes
-      uses: dorny/paths-filter@v2
-      with:
-        filters: |
-          frontend:
-            - 'frontend/**'
-            - 'frontend/**/*'
-          backend:
-            - 'backend/**'
-            - 'backend/**/*'
-          deploy:
-            - '.github/workflows/deploy.yml'
-
   build-frontend:
-    needs: [detect-changes]
     runs-on: ubuntu-latest
-    if: |
-      needs.detect-changes.outputs.frontend-changed == 'true' || 
-      needs.detect-changes.outputs.deploy-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -84,11 +54,7 @@ jobs:
         path: frontend/dist
 
   build-backend:
-    needs: [detect-changes]
     runs-on: ubuntu-latest
-    if: |
-      needs.detect-changes.outputs.backend-changed == 'true' || 
-      needs.detect-changes.outputs.deploy-changed == 'true'
     
     steps:
     - name: Checkout code
@@ -101,19 +67,11 @@ jobs:
         path: backend/
 
   build-frontend-docker:
-    needs: [detect-changes, build-frontend]
+    needs: [build-frontend]
     runs-on: ubuntu-latest
-    if: |
-      github.ref == 'refs/heads/main' && 
-      (needs.detect-changes.outputs.frontend-changed == 'true' || 
-       needs.detect-changes.outputs.deploy-changed == 'true') &&
-      needs.build-frontend.result == 'success'
-    outputs:
-      frontend-built: ${{ steps.set-output.outputs.frontend-built }}
+    if: github.ref == 'refs/heads/main'
+    
     steps:
-    - name: Set output
-      id: set-output
-      run: echo "frontend-built=true" >> $GITHUB_OUTPUT
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -146,19 +104,11 @@ jobs:
         path: hst-frontend.tar
 
   build-backend-docker:
-    needs: [detect-changes, build-backend]
+    needs: [build-backend]
     runs-on: ubuntu-latest
-    if: |
-      github.ref == 'refs/heads/main' && 
-      (needs.detect-changes.outputs.backend-changed == 'true' || 
-       needs.detect-changes.outputs.deploy-changed == 'true') &&
-      needs.build-backend.result == 'success'
-    outputs:
-      backend-built: ${{ steps.set-output.outputs.backend-built }}
+    if: github.ref == 'refs/heads/main'
+    
     steps:
-    - name: Set output
-      id: set-output
-      run: echo "backend-built=true" >> $GITHUB_OUTPUT
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -205,119 +155,23 @@ jobs:
         name: hst-backend-tar
         path: hst-backend.tar
 
-  # 这个job总是运行，用于确保deploy-to-server有依赖
-  ensure-docker-builds:
-    needs: [detect-changes, build-frontend-docker, build-backend-docker]
-    runs-on: ubuntu-latest
-    if: always() && github.ref == 'refs/heads/main'
-    outputs:
-      frontend-result: ${{ steps.collect-results.outputs.frontend_result }}
-      backend-result: ${{ steps.collect-results.outputs.backend_result }}
-    steps:
-    - name: Check build results
-      run: |
-        echo "Frontend build result: ${{ needs.build-frontend-docker.result }}"
-        echo "Backend build result: ${{ needs.build-backend-docker.result }}"
-    - name: Collect results to outputs
-      id: collect-results
-      run: |
-        echo "frontend_result=${{ needs.build-frontend-docker.result }}" >> $GITHUB_OUTPUT
-        echo "backend_result=${{ needs.build-backend-docker.result }}" >> $GITHUB_OUTPUT
-
-  summary-deploy-decision:
-    needs: [detect-changes, ensure-docker-builds]
-    runs-on: ubuntu-latest
-    if: always() && github.ref == 'refs/heads/main'
-    steps:
-    - name: Decide summary
-      id: decide
-      run: |
-        FRONTEND_CHANGED='${{ needs.detect-changes.outputs.frontend-changed }}'
-        BACKEND_CHANGED='${{ needs.detect-changes.outputs.backend-changed }}'
-        DEPLOY_CHANGED='${{ needs.detect-changes.outputs.deploy-changed }}'
-        FRONTEND_RESULT='${{ needs.ensure-docker-builds.outputs.frontend-result }}'
-        BACKEND_RESULT='${{ needs.ensure-docker-builds.outputs.backend-result }}'
-
-        MSG=""
-        if [ "$FRONTEND_CHANGED" = "true" ] && [ "$FRONTEND_RESULT" = "success" ]; then
-          MSG="${MSG}由于前端发生变动，deploy-to-server 将更新前端。"
-        elif [ "$FRONTEND_CHANGED" = "true" ]; then
-          MSG="${MSG}前端发生变动，但前端镜像未成功构建，部署将跳过前端。"
-        fi
-
-        if [ "$BACKEND_CHANGED" = "true" ] && [ "$BACKEND_RESULT" = "success" ]; then
-          MSG="${MSG}由于后端发生变动，deploy-to-server 将更新后端。"
-        elif [ "$BACKEND_CHANGED" = "true" ]; then
-          MSG="${MSG}后端发生变动，但后端镜像未成功构建，部署将跳过后端。"
-        fi
-
-        if [ "$DEPLOY_CHANGED" = "true" ] && [ -z "$MSG" ]; then
-          if [ "$FRONTEND_RESULT" = "success" ] || [ "$BACKEND_RESULT" = "success" ]; then
-            MSG="由于工作流配置发生变动，deploy-to-server 将基于成功构建的镜像执行部署。"
-          else
-            MSG="工作流配置发生变动，但没有成功构建的镜像可部署。"
-          fi
-        fi
-
-        if [ -z "$MSG" ]; then
-          MSG="没有检测到需要部署的变动。"
-        fi
-
-        echo "message=$MSG" >> $GITHUB_OUTPUT
-
-    - name: Print summary
-      run: echo "${{ steps.decide.outputs.message }}"
-
   deploy-to-server:
-    needs: [detect-changes, ensure-docker-builds]
+    needs: [build-frontend-docker, build-backend-docker]
     runs-on: ubuntu-latest
-    if: |
-      github.ref == 'refs/heads/main' &&
-      (needs.ensure-docker-builds.outputs.frontend-result == 'success' || needs.ensure-docker-builds.outputs.backend-result == 'success')
-    continue-on-error: false
+    if: github.ref == 'refs/heads/main'
     
     steps:
-    - name: Debug deploy conditions
-      run: |
-        echo "frontend-changed=${{ needs.detect-changes.outputs.frontend-changed }}"
-        echo "backend-changed=${{ needs.detect-changes.outputs.backend-changed }}"
-        echo "deploy-changed=${{ needs.detect-changes.outputs.deploy-changed }}"
-        echo "ensure.frontend-result=${{ needs.ensure-docker-builds.outputs.frontend-result }}"
-        echo "ensure.backend-result=${{ needs.ensure-docker-builds.outputs.backend-result }}"
     - name: Download frontend tar artifact
-      if: |
-        needs.detect-changes.outputs.frontend-changed == 'true' || 
-        needs.detect-changes.outputs.deploy-changed == 'true'
       uses: actions/download-artifact@v4
       with:
         name: hst-frontend-tar
         path: ./
         
     - name: Download backend tar artifact
-      if: |
-        needs.detect-changes.outputs.backend-changed == 'true' || 
-        needs.detect-changes.outputs.deploy-changed == 'true'
       uses: actions/download-artifact@v4
       with:
         name: hst-backend-tar
         path: ./
-        
-    - name: Check downloaded artifacts
-      run: |
-        echo "📦 检查下载的构建产物："
-        ls -la *.tar 2>/dev/null || echo "没有找到 tar 文件"
-        
-        if [ -f hst-frontend.tar ]; then
-          echo "✅ 前端镜像已下载"
-        else
-          echo "⚠️  前端镜像未找到"
-        fi
-        
-        if [ -f hst-backend.tar ]; then
-          echo "✅ 后端镜像已下载"
-        else
-          echo "⚠️  后端镜像未找到"
-        fi
         
     - name: Deploy to server
       uses: appleboy/scp-action@v0.1.7
@@ -327,7 +181,6 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         source: "*.tar"
         target: '~/'
-        ignore_errors: true
         
     - name: Load and start containers on server
       uses: appleboy/ssh-action@v1.0.3
@@ -336,74 +189,29 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          # 检查哪些镜像需要更新
-          FRONTEND_UPDATE=false
-          BACKEND_UPDATE=false
+          # 停止并删除旧容器
+          docker stop hst-frontend hst-backend || true
+          docker rm hst-frontend hst-backend || true
           
-          if [ -f ~/hst-frontend.tar ]; then
-            FRONTEND_UPDATE=true
-            echo "🔄 检测到前端镜像更新"
-          fi
-          
-          if [ -f ~/hst-backend.tar ]; then
-            BACKEND_UPDATE=true
-            echo "🔄 检测到后端镜像更新"
-          fi
-          
-          # 停止需要更新的容器
-          if [ "$FRONTEND_UPDATE" = true ]; then
-            echo "🛑 停止前端容器..."
-            docker stop hst-frontend || true
-            docker rm hst-frontend || true
-            docker rmi hst-frontend:latest || true
-          fi
-          
-          if [ "$BACKEND_UPDATE" = true ]; then
-            echo "🛑 停止后端容器..."
-            docker stop hst-backend || true
-            docker rm hst-backend || true
-            docker rmi hst-backend:latest || true
-          fi
+          # 删除旧镜像
+          docker rmi hst-frontend:latest hst-backend:latest || true
           
           # 加载新镜像
-          if [ "$FRONTEND_UPDATE" = true ]; then
-            echo "🔄 加载前端镜像..."
-            docker load -i ~/hst-frontend.tar
-          fi
+          docker load -i ~/hst-frontend.tar
+          docker load -i ~/hst-backend.tar
           
-          if [ "$BACKEND_UPDATE" = true ]; then
-            echo "🔄 加载后端镜像..."
-            docker load -i ~/hst-backend.tar
-          fi
-          
-          # 启动容器（只启动需要更新的容器，保持其他容器运行）
-          if [ "$BACKEND_UPDATE" = true ]; then
-            echo "🚀 启动后端容器..."
-            docker run -d -p 6766:6766 --name hst-backend hst-backend:latest
-          elif ! docker ps --format "table {{.Names}}" | grep -q "hst-backend"; then
-            echo "🚀 后端容器未运行，启动后端容器..."
-            docker run -d -p 6766:6766 --name hst-backend hst-backend:latest
-          else
-            echo "✅ 后端容器已在运行，跳过启动"
-          fi
-          
-          if [ "$FRONTEND_UPDATE" = true ]; then
-            echo "🚀 启动前端容器..."
-            docker run -d -p 6767:6767 --name hst-frontend hst-frontend:latest
-          elif ! docker ps --format "table {{.Names}}" | grep -q "hst-frontend"; then
-            echo "🚀 前端容器未运行，启动前端容器..."
-            docker run -d -p 6767:6767 --name hst-frontend hst-frontend:latest
-          else
-            echo "✅ 前端容器已在运行，跳过启动"
-          fi
-          
+          # 启动后端容器（连接到网络）
+          docker run -d -p 6766:6766 --name hst-backend hst-backend:latest
+            
+          # 启动前端容器（连接到网络）
+          docker run -d -p 6767:6767 --name hst-frontend hst-frontend:latest
+            
           # 清理临时文件
           rm -f ~/*.tar
           
           # 显示运行状态
-          echo "📊 当前容器状态："
           docker ps
           
           # 显示网络信息
-          echo "🌐 网络信息："
           docker network ls
+          docker network inspect hst-network
