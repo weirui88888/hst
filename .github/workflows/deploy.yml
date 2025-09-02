@@ -205,14 +205,28 @@ jobs:
         name: hst-backend-tar
         path: hst-backend.tar
 
-  deploy-to-server:
+  # 这个job总是运行，用于确保deploy-to-server有依赖
+  ensure-docker-builds:
     needs: [detect-changes, build-frontend-docker, build-backend-docker]
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main'
+    outputs:
+      frontend-result: ${{ needs.build-frontend-docker.result }}
+      backend-result: ${{ needs.build-backend-docker.result }}
+    steps:
+    - name: Check build results
+      run: |
+        echo "Frontend build result: ${{ needs.build-frontend-docker.result }}"
+        echo "Backend build result: ${{ needs.build-backend-docker.result }}"
+
+  deploy-to-server:
+    needs: [detect-changes, ensure-docker-builds]
     runs-on: ubuntu-latest
     if: |
       github.ref == 'refs/heads/main' && 
-      ((needs.detect-changes.outputs.frontend-changed == 'true' && (needs.build-frontend-docker.result == 'success' || needs.build-frontend-docker.result == 'skipped')) || 
-       (needs.detect-changes.outputs.backend-changed == 'true' && (needs.build-backend-docker.result == 'success' || needs.build-backend-docker.result == 'skipped')) ||
-       (needs.detect-changes.outputs.deploy-changed == 'true' && ((needs.build-frontend-docker.result == 'success' || needs.build-frontend-docker.result == 'skipped') || (needs.build-backend-docker.result == 'success' || needs.build-backend-docker.result == 'skipped'))))
+      ((needs.detect-changes.outputs.frontend-changed == 'true' && needs.ensure-docker-builds.outputs.frontend-result == 'success') || 
+       (needs.detect-changes.outputs.backend-changed == 'true' && needs.ensure-docker-builds.outputs.backend-result == 'success') ||
+       (needs.detect-changes.outputs.deploy-changed == 'true' && (needs.ensure-docker-builds.outputs.frontend-result == 'success' || needs.ensure-docker-builds.outputs.backend-result == 'success')))
     continue-on-error: false
     
     steps:
@@ -259,6 +273,7 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         source: "*.tar"
         target: '~/'
+        ignore_errors: true
         
     - name: Load and start containers on server
       uses: appleboy/ssh-action@v1.0.3
