@@ -1,4 +1,4 @@
-import AliOss from 'ali-oss';
+import AliOss from "ali-oss";
 // 在前端环境缺少官方类型时，使用宽松类型占位，避免 TS 报错
 type AliOssOptions = any;
 type MultipartUploadOptions = any;
@@ -48,7 +48,7 @@ interface UploadOptions {
   region?: string;
 }
 
-interface BatchUploadOptions extends Omit<UploadOptions, 'file'> {
+interface BatchUploadOptions extends Omit<UploadOptions, "file"> {
   files: File[];
 }
 
@@ -70,7 +70,7 @@ class AliOssUpload {
       bucket,
       domain,
       region,
-      directory = '',
+      directory = "",
       extraUploadOptions = {},
       asyncGetStsToken,
     } = config;
@@ -84,22 +84,26 @@ class AliOssUpload {
 
   handelDomain(domain?: string) {
     if (!domain) return;
-    if (typeof domain !== 'string') return;
+    if (typeof domain !== "string") return;
     const regex = /\/$/;
     return regex.test(domain) ? domain : `${domain}/`;
   }
 
   handelDirectory(directory: string) {
-    if (directory === '' || directory === '/') return '';
-    return directory.replace(/^\/+|\/+$/g, '') + '/';
+    if (directory === "" || directory === "/") return "";
+    return directory.replace(/^\/+|\/+$/g, "") + "/";
   }
 
   getConstructOssKey(options: ConstructOssKeyOptions) {
-    const { directory: originDirectory = this.directory, name, randomName } = options;
+    const {
+      directory: originDirectory = this.directory,
+      name,
+      randomName,
+    } = options;
     const directory = this.handelDirectory(originDirectory!);
-    const type = name.split('.')[name.split('.').length - 1];
+    const type = name.split(".")[name.split(".").length - 1];
     if (randomName) {
-      return typeof randomName === 'string'
+      return typeof randomName === "string"
         ? `${directory}${randomName}.${type}`
         : `${directory}${this.getUuid()}.${type}`;
     } else {
@@ -108,20 +112,20 @@ class AliOssUpload {
   }
 
   getUuid() {
-    return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
-      return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
     });
   }
 
   checkStsToken(stsToken: any) {
     if (
-      typeof stsToken !== 'object' ||
-      !('accessKeyId' in stsToken) ||
-      !('accessKeySecret' in stsToken)
+      typeof stsToken !== "object" ||
+      !("accessKeyId" in stsToken) ||
+      !("accessKeySecret" in stsToken)
     ) {
       throw new TypeError(
-        'The return value of asyncGetStsToken method should be StsToken object type, and at least include accessKeyId and accessKeySecret field.',
+        "The return value of asyncGetStsToken method should be StsToken object type, and at least include accessKeyId and accessKeySecret field.",
       );
     }
   }
@@ -143,21 +147,27 @@ class AliOssUpload {
     const { asyncGetStsToken, bucket, region } = options;
     if (!asyncGetStsToken && !this.asyncGetStsToken) {
       throw new Error(
-        'Uploading files requires permission authentication information. You need to provide the global asynchronous method asyncGetStsToken when instantiating AliOssUpload, or actively pass in the asynchronous method asyncGetStsToken when calling the upload method.',
+        "Uploading files requires permission authentication information. You need to provide the global asynchronous method asyncGetStsToken when instantiating AliOssUpload, or actively pass in the asynchronous method asyncGetStsToken when calling the upload method.",
       );
     }
-    if (asyncGetStsToken && typeof asyncGetStsToken !== 'function') {
+    if (asyncGetStsToken && typeof asyncGetStsToken !== "function") {
       throw new TypeError(
-        'The asyncGetStsToken should be an asynchronous function and return stsToken object, and the object includes at least accessKeyId and accessKeySecret fields, and it is better to provide securityToken for temporary access.',
+        "The asyncGetStsToken should be an asynchronous function and return stsToken object, and the object includes at least accessKeyId and accessKeySecret fields, and it is better to provide securityToken for temporary access.",
       );
     }
-    if (!asyncGetStsToken && this.asyncGetStsToken && typeof this.asyncGetStsToken !== 'function') {
+    if (
+      !asyncGetStsToken &&
+      this.asyncGetStsToken &&
+      typeof this.asyncGetStsToken !== "function"
+    ) {
       throw new TypeError(
-        'The asyncGetStsToken should be an asynchronous function and return stsToken object, and the object includes at least accessKeyId and accessKeySecret fields, and it is better to provide securityToken for temporary access.',
+        "The asyncGetStsToken should be an asynchronous function and return stsToken object, and the object includes at least accessKeyId and accessKeySecret fields, and it is better to provide securityToken for temporary access.",
       );
     }
     try {
-      const stsToken = asyncGetStsToken ? await asyncGetStsToken() : await this.asyncGetStsToken!();
+      const stsToken = asyncGetStsToken
+        ? await asyncGetStsToken()
+        : await this.asyncGetStsToken!();
       this.checkStsToken(stsToken);
       const ossConfig: AliOssOptions = this.getOssConfig({
         stsToken,
@@ -172,8 +182,16 @@ class AliOssUpload {
 
   initOssClient = async (options: InitOssClientOptions = {}) => {
     try {
-      const { asyncGetStsToken, bucket = this.bucket, region = this.region } = options;
-      const ossConfig = await this.getConfig({ asyncGetStsToken, bucket, region });
+      const {
+        asyncGetStsToken,
+        bucket = this.bucket,
+        region = this.region,
+      } = options;
+      const ossConfig = await this.getConfig({
+        asyncGetStsToken,
+        bucket,
+        region,
+      });
       return new AliOss(ossConfig as AliOssOptions);
     } catch (error: any) {
       console.error(error.message);
@@ -194,7 +212,11 @@ class AliOssUpload {
     } = uploadOptions;
 
     try {
-      const ossConfig = await this.getConfig({ asyncGetStsToken, bucket, region });
+      const ossConfig = await this.getConfig({
+        asyncGetStsToken,
+        bucket,
+        region,
+      });
       const { name } = file;
       const ossClient = new AliOss(ossConfig as AliOssOptions);
       const uploadOptions = (extraUploadOptions ??
@@ -209,7 +231,7 @@ class AliOssUpload {
         file,
         uploadOptions as MultipartUploadOptions,
       );
-      return this.domain
+      const result = this.domain
         ? {
             ossSourceUrl: `${this.domain}${res.name}`,
             ...res,
@@ -218,6 +240,22 @@ class AliOssUpload {
             ossSourceUrl: `https://${bucket}.${region}.aliyuncs.com/${res.name}`,
             ...res,
           };
+      // 便于在浏览器与 iOS PWA 环境中对比调试最终地址
+      try {
+        console.info(res);
+        console.info(
+          "[AliOssUpload] Upload success",
+          JSON.stringify({
+            ossSourceUrl: (result as any).ossSourceUrl,
+            name: (result as any).name,
+            resRequestId: (result as any).res?.requestId,
+            bucket,
+            region,
+            domain: this.domain,
+          }),
+        );
+      } catch {}
+      return result as any;
     } catch (error: any) {
       console.error(error.message);
       return error.message;
@@ -238,8 +276,7 @@ class AliOssUpload {
         );
       }
       return await Promise.all(uploadQueue);
-    } catch (error: any) {
-    }
+    } catch (error: any) {}
   };
 }
 
@@ -259,13 +296,16 @@ export async function uploadImageViaEnv(file: File): Promise<string> {
   const bucket = import.meta.env.VITE_OSS_BUCKET as string;
   const region = import.meta.env.VITE_OSS_REGION as string;
   const domain = (import.meta.env.VITE_OSS_DOMAIN as string) || undefined;
-  const directory = (import.meta.env.VITE_OSS_DIRECTORY as string) || '';
+  const directory = (import.meta.env.VITE_OSS_DIRECTORY as string) || "";
   const accessKeyId = import.meta.env.VITE_OSS_ACCESS_KEY_ID as string;
   const accessKeySecret = import.meta.env.VITE_OSS_ACCESS_KEY_SECRET as string;
 
-  if (!bucket || !region) throw new Error('OSS 配置缺失：VITE_OSS_BUCKET 或 VITE_OSS_REGION');
+  if (!bucket || !region)
+    throw new Error("OSS 配置缺失：VITE_OSS_BUCKET 或 VITE_OSS_REGION");
   if (!accessKeyId || !accessKeySecret)
-    throw new Error('缺少 VITE_OSS_ACCESS_KEY_ID 或 VITE_OSS_ACCESS_KEY_SECRET');
+    throw new Error(
+      "缺少 VITE_OSS_ACCESS_KEY_ID 或 VITE_OSS_ACCESS_KEY_SECRET",
+    );
 
   const uploader = new AliOssUpload({
     bucket,
@@ -273,7 +313,8 @@ export async function uploadImageViaEnv(file: File): Promise<string> {
     domain,
     directory,
     // 仅用于你当前本地自测：直接回传长期 AK/SK。强烈建议尽快切换到 STS。
-    asyncGetStsToken: async () => ({ accessKeyId, accessKeySecret }) as StsToken,
+    asyncGetStsToken: async () =>
+      ({ accessKeyId, accessKeySecret }) as StsToken,
   });
 
   const res = await uploader.upload({ file, directory, randomName: true });
