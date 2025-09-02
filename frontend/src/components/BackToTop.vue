@@ -14,7 +14,12 @@
       :style="positionStyle"
       title="返回顶部"
     >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -27,53 +32,78 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 
-  const showBackToTop = ref(false);
-  const viewportWidth = ref(0);
-  const viewportHeight = ref(0);
-  const threshold = ref(1000);
+const showBackToTop = ref(false);
+const viewportWidth = ref(0);
+const viewportHeight = ref(0);
+const threshold = ref(1000);
+const isAutoPlaying = ref(false);
 
-  const checkScrollPosition = () => {
-    showBackToTop.value = window.scrollY > threshold.value;
+const checkScrollPosition = () => {
+  // 只有在非自动播放状态下才显示返回顶部按钮
+  showBackToTop.value =
+    window.scrollY > threshold.value && !isAutoPlaying.value;
+};
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
+
+const updateViewport = () => {
+  viewportWidth.value = window.innerWidth;
+  viewportHeight.value = window.innerHeight;
+  // 自适应显示阈值：移动端更早显示
+  threshold.value =
+    viewportWidth.value <= 450 ? 300 : viewportHeight.value < 800 ? 600 : 1000;
+};
+
+const positionStyle = computed(() => {
+  const isNarrow = viewportWidth.value <= 450;
+  return {
+    bottom: isNarrow ? "calc(1.5rem + env(safe-area-inset-bottom))" : "2rem",
+    right: isNarrow ? "1rem" : "2rem",
+  } as Record<string, string>;
+});
+
+onMounted(() => {
+  updateViewport();
+  window.addEventListener("scroll", checkScrollPosition, { passive: true });
+  window.addEventListener("resize", updateViewport, { passive: true } as any);
+
+  // 监听自动播放状态变化
+  const checkAutoPlayStatus = () => {
+    if ((window as any).isAutoPlaying) {
+      // 使用watch监听自动播放状态变化
+      watch(
+        (window as any).isAutoPlaying,
+        (newValue) => {
+          isAutoPlaying.value = newValue;
+          checkScrollPosition(); // 重新检查显示状态
+        },
+        { immediate: true },
+      );
+    } else {
+      // 如果AutoPlayButton还没初始化，延迟检查
+      setTimeout(checkAutoPlayStatus, 100);
+    }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
+  checkAutoPlayStatus();
 
-  const updateViewport = () => {
-    viewportWidth.value = window.innerWidth;
-    viewportHeight.value = window.innerHeight;
-    // 自适应显示阈值：移动端更早显示
-    threshold.value = viewportWidth.value <= 450 ? 300 : viewportHeight.value < 800 ? 600 : 1000;
-  };
+  // 初始化检查
+  checkScrollPosition();
+});
 
-  const positionStyle = computed(() => {
-    const isNarrow = viewportWidth.value <= 450;
-    return {
-      bottom: isNarrow ? 'calc(1.5rem + env(safe-area-inset-bottom))' : '2rem',
-      right: isNarrow ? '1rem' : '2rem',
-    } as Record<string, string>;
-  });
-
-  onMounted(() => {
-    updateViewport();
-    window.addEventListener('scroll', checkScrollPosition, { passive: true });
-    window.addEventListener('resize', updateViewport, { passive: true } as any);
-    // 初始化检查
-    checkScrollPosition();
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener('scroll', checkScrollPosition);
-    window.removeEventListener('resize', updateViewport as any);
-  });
+onUnmounted(() => {
+  window.removeEventListener("scroll", checkScrollPosition);
+  window.removeEventListener("resize", updateViewport as any);
+});
 </script>
 
 <style scoped>
-  /* 可以添加额外的自定义样式 */
+/* 可以添加额外的自定义样式 */
 </style>

@@ -93,6 +93,7 @@ const startAutoPlayInternal = () => {
   audio
     .play()
     .then(() => {
+      console.log("🎵 音乐开始播放，页面开始自动滚动");
       // 记录开始时间和初始滚动位置
       autoScrollStartTime.value = Date.now();
       lastScrollTop.value = window.pageYOffset;
@@ -151,8 +152,17 @@ const toggleAutoPlay = () => {
 
 // 监听音乐结束事件
 const handleMusicEnded = () => {
-  // 音乐结束时继续滚动，不自动停止
-  // 用户可以手动停止或滚动到页面底部时停止
+  // 如果自动播放还在进行中，重新播放音乐
+  if (isAutoPlaying.value) {
+    const audio = getMusicAudio();
+    if (audio) {
+      console.log("🔄 音乐播放完毕，重新开始播放");
+      audio.currentTime = 0; // 重置到开始位置
+      audio.play().catch((error) => {
+        console.error("音乐重新播放失败:", error);
+      });
+    }
+  }
 };
 
 // 监听用户滚动事件
@@ -193,6 +203,19 @@ onMounted(() => {
     }
   };
 
+  // 添加全局函数，供其他组件调用
+  (window as any).setProgrammaticScroll = (isProgrammatic: boolean) => {
+    isProgrammaticScroll.value = isProgrammatic;
+    if (isProgrammatic) {
+      // 程序化滚动时，短暂延迟后重置状态
+      setTimeout(() => {
+        isProgrammaticScroll.value = false;
+      }, 1000);
+    }
+  };
+
+  // 添加全局状态，供其他组件监听自动播放状态
+  (window as any).isAutoPlaying = isAutoPlaying;
   checkMusicPlayer();
 
   // 添加滚动监听器
