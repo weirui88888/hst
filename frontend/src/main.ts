@@ -6,7 +6,11 @@ import App from "./App.vue";
 import { vIntersect } from "./directives/intersect";
 import { vGsap } from "./directives/gsapScroll";
 import { setupCalendar, DatePicker } from "v-calendar";
-import { applySiteThemeCSSVariables } from "./config/siteTheme";
+import {
+  applySiteThemeCSSVariables,
+  applyMetaThemeColor,
+  detectCurrentTheme,
+} from "./config/siteTheme";
 import { initVConsole } from "./utils/vconsole";
 
 // 全局滚动恢复机制 - 修复双重滚动条问题
@@ -50,3 +54,5 @@ app.mount("#app");
 
 // 设置站点主色 CSS 变量（可扩展为从设置中读取）
 applySiteThemeCSSVariables();
+// 设置浏览器地址栏主题色，跟随当前主题
+applyMetaThemeColor(detectCurrentTheme());
