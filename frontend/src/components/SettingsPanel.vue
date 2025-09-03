@@ -35,7 +35,9 @@
                 />
               </svg>
             </div>
-            <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-200">
+            <h2
+              class="text-base font-semibold text-neutral-800 dark:text-neutral-200"
+            >
               {{ UI_TEXTS.settings.title }}
             </h2>
           </div>
@@ -44,7 +46,12 @@
             class="text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 transition-all duration-200 bg-none border-none"
             style="background: none; border: none"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -59,7 +66,9 @@
         <div class="space-y-6">
           <!-- 页面设置 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
+            <h3
+              class="text-lg font-medium text-neutral-800 dark:text-neutral-200"
+            >
               {{ UI_TEXTS.settings.pageSettings }}
             </h3>
 
@@ -69,7 +78,9 @@
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
-                  <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
                     {{ UI_TEXTS.settings.pageAnimation.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
@@ -110,7 +121,9 @@
                     </svg>
                   </button>
                   <!-- 状态指示文字 -->
-                  <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <span
+                    class="ml-2 text-xs text-neutral-500 dark:text-neutral-400"
+                  >
                     {{
                       animationsEnabled
                         ? UI_TEXTS.settings.pageAnimation.on
@@ -126,7 +139,9 @@
               class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
             >
               <div>
-                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                <h4
+                  class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                >
                   {{ UI_TEXTS.settings.siteTitle.title }}
                 </h4>
                 <p class="text-xs text-neutral-600 dark:text-neutral-300">
@@ -148,7 +163,9 @@
               class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
             >
               <div>
-                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                <h4
+                  class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                >
                   {{ UI_TEXTS.settings.endText.title }}
                 </h4>
                 <p class="text-xs text-neutral-600 dark:text-neutral-300">
@@ -170,7 +187,9 @@
               class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
             >
               <div>
-                <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                <h4
+                  class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                >
                   {{ UI_TEXTS.settings.epilogueMessage.title }}
                 </h4>
                 <p class="text-xs text-neutral-600 dark:text-neutral-300">
@@ -180,25 +199,33 @@
               <div class="mt-3 space-y-3">
                 <!-- 主寄语 -->
                 <div>
-                  <label class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block">
+                  <label
+                    class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block"
+                  >
                     {{ UI_TEXTS.settings.epilogueMessage.mainTitle }}
                   </label>
                   <input
                     v-model="localEpilogueMainTitle"
                     type="text"
-                    :placeholder="UI_TEXTS.settings.epilogueMessage.mainPlaceholder"
+                    :placeholder="
+                      UI_TEXTS.settings.epilogueMessage.mainPlaceholder
+                    "
                     class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                   />
                 </div>
                 <!-- 副寄语 -->
                 <div>
-                  <label class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block">
+                  <label
+                    class="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block"
+                  >
                     {{ UI_TEXTS.settings.epilogueMessage.subTitle }}
                   </label>
                   <input
                     v-model="localEpilogueSubTitle"
                     type="text"
-                    :placeholder="UI_TEXTS.settings.epilogueMessage.subPlaceholder"
+                    :placeholder="
+                      UI_TEXTS.settings.epilogueMessage.subPlaceholder
+                    "
                     class="w-full px-0 py-2 border-0 border-b border-neutral-300 dark:border-neutral-600 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 outline-none focus:border-neutral-400"
                   />
                 </div>
@@ -211,14 +238,18 @@
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
-                  <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
                     {{ UI_TEXTS.settings.musicAutoPlay.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
                     {{ UI_TEXTS.settings.musicAutoPlay.description }}
                   </p>
                   <!-- 提示信息 -->
-                  <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 italic">
+                  <p
+                    class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 italic"
+                  >
                     {{ UI_TEXTS.settings.musicAutoPlay.tip }}
                   </p>
                 </div>
@@ -256,7 +287,9 @@
                     </svg>
                   </button>
                   <!-- 状态指示文字 -->
-                  <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <span
+                    class="ml-2 text-xs text-neutral-500 dark:text-neutral-400"
+                  >
                     {{
                       musicAutoPlay
                         ? UI_TEXTS.settings.musicAutoPlay.on
@@ -266,11 +299,65 @@
                 </div>
               </div>
             </div>
+
+            <!-- 背景音乐选择（独立区域） -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 hidden md:block"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
+                    {{ UI_TEXTS.settings.musicSelection.title }}
+                  </h4>
+                  <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                    {{ UI_TEXTS.settings.musicSelection.description }}
+                  </p>
+                  <div class="mt-3 space-y-0.5">
+                    <div v-for="opt in SITE_MUSIC_OPTIONS" :key="opt.id">
+                      <button
+                        type="button"
+                        class="w-full flex items-center justify-between py-1 pl-0 rounded-md transition-colors text-left bg-transparent border-none focus:outline-none hover:bg-transparent"
+                        @click="setLocalMusic(opt.id)"
+                        :aria-pressed="localMusic === opt.id"
+                      >
+                        <span
+                          class="text-sm text-neutral-700 dark:text-neutral-300"
+                          :style="
+                            localMusic === opt.id
+                              ? { color: 'var(--site-main-color)' }
+                              : {}
+                          "
+                        >
+                          {{ opt.name }}
+                        </span>
+                        <svg
+                          v-if="localMusic === opt.id"
+                          class="w-4 h-4 flex-shrink-0"
+                          :style="{ color: 'var(--site-main-color)' }"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 时间轴设置 -->
           <div class="space-y-4 hidden md:block">
-            <h3 class="text-lg font-medium text-neutral-800 dark:text-neutral-200">
+            <h3
+              class="text-lg font-medium text-neutral-800 dark:text-neutral-200"
+            >
               {{ UI_TEXTS.settings.timelineSettings }}
             </h3>
 
@@ -280,12 +367,14 @@
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
-                  <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
                     {{ UI_TEXTS.settings.timelinePosition.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
                     {{
-                      timeAxisPosition === 'left'
+                      timeAxisPosition === "left"
                         ? UI_TEXTS.settings.timelinePosition.leftDesc
                         : UI_TEXTS.settings.timelinePosition.rightDesc
                     }}
@@ -294,19 +383,27 @@
                 <!-- 自定义开关 -->
                 <div class="flex items-center">
                   <button
-                    @click="setTimeAxisPosition(timeAxisPosition === 'left' ? 'right' : 'left')"
+                    @click="
+                      setTimeAxisPosition(
+                        timeAxisPosition === 'left' ? 'right' : 'left',
+                      )
+                    "
                     class="relative w-8 h-6 bg-neutral-600 dark:bg-neutral-500 rounded-sm transition-all duration-200 focus:outline-none border-none hover:bg-neutral-500 dark:hover:bg-neutral-400"
                   >
                     <div
                       class="absolute top-1/2 w-1 h-3/5 rounded-sm shadow-sm transition-all duration-200 -translate-y-1/2"
                       :style="{ backgroundColor: 'var(--site-main-color)' }"
-                      :class="timeAxisPosition === 'right' ? 'left-6' : 'left-1'"
+                      :class="
+                        timeAxisPosition === 'right' ? 'left-6' : 'left-1'
+                      "
                     ></div>
                   </button>
                   <!-- 状态指示文字 -->
-                  <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <span
+                    class="ml-2 text-xs text-neutral-500 dark:text-neutral-400"
+                  >
                     {{
-                      timeAxisPosition === 'right'
+                      timeAxisPosition === "right"
                         ? UI_TEXTS.settings.timelinePosition.right
                         : UI_TEXTS.settings.timelinePosition.left
                     }}
@@ -321,7 +418,9 @@
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
-                  <h4 class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
                     {{ UI_TEXTS.settings.seasonalIndicator.title }}
                   </h4>
                   <p class="text-xs text-neutral-600 dark:text-neutral-300">
@@ -362,7 +461,9 @@
                     </svg>
                   </button>
                   <!-- 状态指示文字 -->
-                  <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  <span
+                    class="ml-2 text-xs text-neutral-500 dark:text-neutral-400"
+                  >
                     {{
                       seasonalIndicator
                         ? UI_TEXTS.settings.pageAnimation.on
@@ -373,8 +474,6 @@
               </div>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>
@@ -389,181 +488,202 @@
 </template>
 
 <script setup lang="ts">
-  // @ts-nocheck
-  import { computed, ref, watch } from 'vue';
-  import { UI_TEXTS } from '../config/texts';
+// @ts-nocheck
+import { computed, ref, watch } from "vue";
+import { UI_TEXTS } from "../config/texts";
+import { SITE_MUSIC_OPTIONS } from "../config/musicCatalog";
 
-  const emit = defineEmits([
-    'update:seasonalIndicator',
-    'update:animationsEnabled',
-    'update:modelValue',
-    'update:timeAxisPosition',
-    'update:siteTitle',
-    'update:siteEndText',
-    'update:epilogueMainTitle',
-    'update:epilogueSubTitle',
-    'update:musicAutoPlay',
-  ]);
+const emit = defineEmits([
+  "update:seasonalIndicator",
+  "update:animationsEnabled",
+  "update:modelValue",
+  "update:timeAxisPosition",
+  "update:siteTitle",
+  "update:siteEndText",
+  "update:epilogueMainTitle",
+  "update:epilogueSubTitle",
+  "update:musicAutoPlay",
+  "update:siteMusic",
+]);
 
-  const props = defineProps<{
-    seasonalIndicator?: boolean;
-    animationsEnabled?: boolean;
-    timeAxisPosition?: string;
-    modelValue?: boolean;
-    siteTitle?: string;
-    siteEndText?: string;
-    epilogueMainTitle?: string;
-    epilogueSubTitle?: string;
-    musicAutoPlay?: boolean;
-  }>();
+const props = defineProps<{
+  seasonalIndicator?: boolean;
+  animationsEnabled?: boolean;
+  timeAxisPosition?: string;
+  modelValue?: boolean;
+  siteTitle?: string;
+  siteEndText?: string;
+  epilogueMainTitle?: string;
+  epilogueSubTitle?: string;
+  musicAutoPlay?: boolean;
+  siteMusic?: "you-are-the-reason" | "bleeding-love";
+}>();
 
-  // 本地状态，用于跟踪配置是否已修改
-  const hasChanges = ref(false);
+// 本地状态，用于跟踪配置是否已修改
+const hasChanges = ref(false);
 
-  // 本地状态，用于在编辑过程中保持用户输入的值
-  const localInputs = ref({
-    siteTitle: props.siteTitle || '多多与贺贺的青春',
-    siteEndText: props.siteEndText || '十二年的陪伴，是最长情的告白',
-    epilogueMainTitle: props.epilogueMainTitle || '流转的岁月里，爱从未缺席',
-    epilogueSubTitle: props.epilogueSubTitle || '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
-  });
+// 本地状态，用于在编辑过程中保持用户输入的值
+const localInputs = ref({
+  siteTitle: props.siteTitle || "多多与贺贺的青春",
+  siteEndText: props.siteEndText || "十二年的陪伴，是最长情的告白",
+  epilogueMainTitle: props.epilogueMainTitle || "流转的岁月里，爱从未缺席",
+  epilogueSubTitle:
+    props.epilogueSubTitle ||
+    "贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量",
+});
+const localMusic = ref(props.siteMusic || "you-are-the-reason");
 
-  // 监听props变化，只在面板打开时更新本地状态
-  watch(() => props.modelValue, (isOpen) => {
+// 监听props变化，只在面板打开时更新本地状态
+watch(
+  () => props.modelValue,
+  (isOpen) => {
     if (isOpen) {
       // 面板打开时，同步props到本地状态
-      localInputs.value.siteTitle = props.siteTitle || '多多与贺贺的青春';
-      localInputs.value.siteEndText = props.siteEndText || '十二年的陪伴，是最长情的告白';
-      localInputs.value.epilogueMainTitle = props.epilogueMainTitle || '流转的岁月里，爱从未缺席';
-      localInputs.value.epilogueSubTitle = props.epilogueSubTitle || '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !';
+      localInputs.value.siteTitle = props.siteTitle || "多多与贺贺的青春";
+      localInputs.value.siteEndText =
+        props.siteEndText || "十二年的陪伴，是最长情的告白";
+      localInputs.value.epilogueMainTitle =
+        props.epilogueMainTitle || "流转的岁月里，爱从未缺席";
+      localInputs.value.epilogueSubTitle =
+        props.epilogueSubTitle ||
+        "贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量";
+      localMusic.value = props.siteMusic || "you-are-the-reason";
     }
-  });
+  },
+);
 
-  const localSiteTitle = computed({
-    get: () => localInputs.value.siteTitle,
-    set: (v: string) => {
-      // 直接使用用户输入的值，不应用默认值
-      localInputs.value.siteTitle = v;
-      emit('update:siteTitle', v);
-      hasChanges.value = true;
-    },
-  });
-
-  const localSiteEndText = computed({
-    get: () => localInputs.value.siteEndText,
-    set: (v: string) => {
-      // 直接使用用户输入的值，不应用默认值
-      localInputs.value.siteEndText = v;
-      emit('update:siteEndText', v);
-      hasChanges.value = true;
-    },
-  });
-
-  const localEpilogueMainTitle = computed({
-    get: () => localInputs.value.epilogueMainTitle,
-    set: (v: string) => {
-      // 直接使用用户输入的值，不应用默认值
-      localInputs.value.epilogueMainTitle = v;
-      emit('update:epilogueMainTitle', v);
-      hasChanges.value = true;
-    },
-  });
-
-  const localEpilogueSubTitle = computed({
-    get: () => localInputs.value.epilogueSubTitle,
-    set: (v: string) => {
-      // 直接使用用户输入的值，不应用默认值
-      localInputs.value.epilogueSubTitle = v;
-      emit('update:epilogueSubTitle', v);
-      hasChanges.value = true;
-    },
-  });
-
-  const musicAutoPlay = computed({
-    get: () => props.musicAutoPlay ?? true,
-    set: (v: boolean) => {
-      emit('update:musicAutoPlay', v);
-      hasChanges.value = true;
-    },
-  });
-  const isOpen = computed({
-    get: (): boolean => !!props.modelValue,
-    set: (value: boolean) => emit('update:modelValue', value),
-  });
-
-  const toggleSettings = () => {
-    isOpen.value = !isOpen.value;
-  };
-
-  const handleCloseSettings = () => {
-    // 关闭设置面板时，如果有修改则触发更新
-    if (hasChanges.value) {
-      // 触发父组件的更新逻辑
-      emit('update:modelValue', false);
-      hasChanges.value = false;
-    } else {
-      isOpen.value = false;
-    }
-  };
-
-
-
-  const toggleSeasonalIndicator = () => {
-    emit('update:seasonalIndicator', !props.seasonalIndicator);
+const localSiteTitle = computed({
+  get: () => localInputs.value.siteTitle,
+  set: (v: string) => {
+    // 直接使用用户输入的值，不应用默认值
+    localInputs.value.siteTitle = v;
+    emit("update:siteTitle", v);
     hasChanges.value = true;
-  };
+  },
+});
 
-  const toggleAnimationsEnabled = () => {
-    emit('update:animationsEnabled', !props.animationsEnabled);
+const localSiteEndText = computed({
+  get: () => localInputs.value.siteEndText,
+  set: (v: string) => {
+    // 直接使用用户输入的值，不应用默认值
+    localInputs.value.siteEndText = v;
+    emit("update:siteEndText", v);
     hasChanges.value = true;
-  };
+  },
+});
 
-  const toggleMusicAutoPlay = () => {
-    emit('update:musicAutoPlay', !props.musicAutoPlay);
+const localEpilogueMainTitle = computed({
+  get: () => localInputs.value.epilogueMainTitle,
+  set: (v: string) => {
+    // 直接使用用户输入的值，不应用默认值
+    localInputs.value.epilogueMainTitle = v;
+    emit("update:epilogueMainTitle", v);
     hasChanges.value = true;
-  };
+  },
+});
 
-  const setTimeAxisPosition = (position: string) => {
-    emit('update:timeAxisPosition', position);
+const localEpilogueSubTitle = computed({
+  get: () => localInputs.value.epilogueSubTitle,
+  set: (v: string) => {
+    // 直接使用用户输入的值，不应用默认值
+    localInputs.value.epilogueSubTitle = v;
+    emit("update:epilogueSubTitle", v);
     hasChanges.value = true;
-  };
+  },
+});
 
-  // 监听面板打开状态，重置修改标记
-  watch(() => props.modelValue, (newValue) => {
+const musicAutoPlay = computed({
+  get: () => props.musicAutoPlay ?? true,
+  set: (v: boolean) => {
+    emit("update:musicAutoPlay", v);
+    hasChanges.value = true;
+  },
+});
+const isOpen = computed({
+  get: (): boolean => !!props.modelValue,
+  set: (value: boolean) => emit("update:modelValue", value),
+});
+
+const toggleSettings = () => {
+  isOpen.value = !isOpen.value;
+};
+
+const handleCloseSettings = () => {
+  // 关闭设置面板时，如果有修改则触发更新
+  if (hasChanges.value) {
+    // 触发父组件的更新逻辑
+    emit("update:modelValue", false);
+    hasChanges.value = false;
+  } else {
+    isOpen.value = false;
+  }
+};
+
+const toggleSeasonalIndicator = () => {
+  emit("update:seasonalIndicator", !props.seasonalIndicator);
+  hasChanges.value = true;
+};
+
+const toggleAnimationsEnabled = () => {
+  emit("update:animationsEnabled", !props.animationsEnabled);
+  hasChanges.value = true;
+};
+
+const toggleMusicAutoPlay = () => {
+  emit("update:musicAutoPlay", !props.musicAutoPlay);
+  hasChanges.value = true;
+};
+
+const setLocalMusic = (m: "you-are-the-reason" | "bleeding-love") => {
+  localMusic.value = m;
+  emit("update:siteMusic", m);
+  hasChanges.value = true;
+};
+
+const setTimeAxisPosition = (position: string) => {
+  emit("update:timeAxisPosition", position);
+  hasChanges.value = true;
+};
+
+// 监听面板打开状态，重置修改标记
+watch(
+  () => props.modelValue,
+  (newValue) => {
     if (newValue) {
       hasChanges.value = false;
     }
-  });
+  },
+);
 </script>
 
 <style scoped>
-  /* 自定义滚动条 */
-  .overflow-y-auto::-webkit-scrollbar {
-    width: 4px;
-  }
+/* 自定义滚动条 */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
 
-  .overflow-y-auto::-webkit-scrollbar-track {
-    background: transparent;
-  }
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  .overflow-y-auto::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.3);
-    border-radius: 2px;
-  }
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
 
-  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.5);
-  }
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
 
-  /* 设置面板动画 */
-  .settings-panel-enter-active,
-  .settings-panel-leave-active {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+/* 设置面板动画 */
+.settings-panel-enter-active,
+.settings-panel-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  .settings-panel-enter-from,
-  .settings-panel-leave-to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
+.settings-panel-enter-from,
+.settings-panel-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
 </style>

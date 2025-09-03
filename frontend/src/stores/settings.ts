@@ -84,6 +84,15 @@ const getInitialMasterMode = (): boolean => {
   }
 };
 
+const getInitialSiteMusic = (): string => {
+  try {
+    const stored = localStorage.getItem("hst_site_music");
+    return stored ?? "you-are-the-reason";
+  } catch {
+    return "you-are-the-reason";
+  }
+};
+
 export const useSettingsStore = defineStore("settings", {
   state: () => ({
     timeAxisPosition: getInitialTimeAxisPosition() as "left" | "right",
@@ -100,6 +109,8 @@ export const useSettingsStore = defineStore("settings", {
     hasUnsavedChanges: false,
     // 主人模式（控制额外按钮与编辑权限）
     isMasterMode: getInitialMasterMode(),
+    // 背景音乐选择
+    siteMusic: getInitialSiteMusic(),
   }),
 
   actions: {
@@ -119,6 +130,7 @@ export const useSettingsStore = defineStore("settings", {
         this.timeAxisPosition = config.timeAxisPosition;
         this.seasonalIndicator = config.seasonalIndicator;
         this.animationsEnabled = config.animationsEnabled;
+        this.siteMusic = (config as any).siteMusic || "you-are-the-reason";
 
         // 同步到本地存储
         this.saveToLocalStorage();
@@ -148,6 +160,7 @@ export const useSettingsStore = defineStore("settings", {
         timeAxisPosition: this.timeAxisPosition,
         seasonalIndicator: this.seasonalIndicator,
         animationsEnabled: this.animationsEnabled,
+        siteMusic: (this as any).siteMusic,
       };
 
       try {
@@ -159,6 +172,7 @@ export const useSettingsStore = defineStore("settings", {
           timeAxisPosition: this.timeAxisPosition,
           seasonalIndicator: this.seasonalIndicator,
           animationsEnabled: this.animationsEnabled,
+          siteMusic: (this as any).siteMusic,
         });
 
         // 同步到本地存储
@@ -177,6 +191,7 @@ export const useSettingsStore = defineStore("settings", {
         this.timeAxisPosition = originalState.timeAxisPosition;
         this.seasonalIndicator = originalState.seasonalIndicator;
         this.animationsEnabled = originalState.animationsEnabled;
+        (this as any).siteMusic = (originalState as any).siteMusic as any;
 
         // 重新保存到本地存储
         this.saveToLocalStorage();
@@ -238,6 +253,14 @@ export const useSettingsStore = defineStore("settings", {
       this.markAsChanged();
     },
 
+    setSiteMusic(music: string) {
+      this.siteMusic = music;
+      try {
+        localStorage.setItem("hst_site_music", music);
+      } catch {}
+      this.markAsChanged();
+    },
+
     // 设置主人模式（同页内响应式，跨标签页依赖 storage 事件）
     setMasterMode(enabled: boolean) {
       this.isMasterMode = enabled;
@@ -261,6 +284,7 @@ export const useSettingsStore = defineStore("settings", {
       this.saveEpilogueMainTitle();
       this.saveEpilogueSubTitle();
       this.saveMusicAutoPlay();
+      this.saveSiteMusicKey();
     },
 
     saveTimeAxisPosition() {
@@ -353,6 +377,14 @@ export const useSettingsStore = defineStore("settings", {
         );
       } catch (error) {
         console.warn("Failed to save music auto play to localStorage:", error);
+      }
+    },
+
+    saveSiteMusicKey() {
+      try {
+        localStorage.setItem("hst_site_music", this.siteMusic);
+      } catch (error) {
+        console.warn("Failed to save site music to localStorage:", error);
       }
     },
 

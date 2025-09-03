@@ -127,6 +127,7 @@
       :epilogueMainTitle="settings.epilogueMainTitle"
       :epilogueSubTitle="settings.epilogueSubTitle"
       :musicAutoPlay="settings.musicAutoPlay"
+      :siteMusic="settings.siteMusic"
       @update:seasonalIndicator="settings.setSeasonalIndicator"
       @update:animationsEnabled="updateAnimationsEnabled"
       @update:timeAxisPosition="settings.setTimeAxisPosition"
@@ -135,6 +136,7 @@
       @update:epilogueMainTitle="settings.setEpilogueMainTitle"
       @update:epilogueSubTitle="settings.setEpilogueSubTitle"
       @update:musicAutoPlay="settings.setMusicAutoPlay"
+      @update:siteMusic="settings.setSiteMusic"
       @update:modelValue="handleSettingsPanelChange"
     />
   </div>

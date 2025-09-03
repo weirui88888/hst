@@ -50,8 +50,9 @@ export const UI_TEXTS = {
       mainDefault: "流转的岁月里，爱从未缺席",
       subTitle: "副寄语",
       subPlaceholder:
-        "多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !",
-      subDefault: "多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !",
+        "贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量",
+      subDefault:
+        "贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量",
     },
 
     // 时间轴位置
@@ -76,6 +77,14 @@ export const UI_TEXTS = {
       on: "开启",
       off: "关闭",
       tip: "如果音乐无法播放，请前往浏览器设置 → 声音 → 允许播放声音，并添加当前网站",
+    },
+
+    // 背景音乐选择
+    musicSelection: {
+      title: "背景音乐",
+      description: "选择站点的背景音乐",
+      optionYouAreTheReason: "You are the reason",
+      optionBleedingLove: "Bleeding love",
     },
 
     // 其他
@@ -125,7 +134,8 @@ export const UI_TEXTS = {
   // 故事延续文案（默认值，实际使用配置中的值）
   storyContinuation: {
     title: "流转的岁月里，爱从未缺席",
-    subtitle: "多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !",
+    subtitle:
+      "贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量",
   },
 } as const;
 

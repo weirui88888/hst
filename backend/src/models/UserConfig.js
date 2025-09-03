@@ -26,7 +26,8 @@ const userConfigSchema = new mongoose.Schema(
     epilogueSubTitle: {
       type: String,
       required: true,
-      default: '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
+      default:
+        '贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量',
       trim: true,
       maxlength: 300
     },
@@ -42,6 +43,10 @@ const userConfigSchema = new mongoose.Schema(
     animationsEnabled: {
       type: Boolean,
       default: true
+    },
+    siteMusic: {
+      type: String,
+      default: 'you-are-the-reason'
     },
     createdAt: {
       type: Date,

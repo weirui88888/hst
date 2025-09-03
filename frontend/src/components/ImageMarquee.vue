@@ -198,13 +198,6 @@ const renderKey = ref(0);
 watch(
   () => extractedImages.value.length,
   async (newLength, oldLength) => {
-    debugLog.info("ImageMarquee数据变化", {
-      oldLength,
-      newLength,
-      hasPropsImages: !!(props.images && props.images.length),
-      storeItemsLength: store.items?.length || 0,
-    });
-
     if (newLength > 0 && oldLength === 0) {
       debugLog.success("ImageMarquee开始渲染", { imageCount: newLength });
       // 当从无数据变为有数据时，强制重新渲染

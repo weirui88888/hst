@@ -13,10 +13,11 @@ export const getUserConfig = async (req, res) => {
         siteEndText: '十二年的陪伴，是最长情的告白',
         epilogueMainTitle: '流转的岁月里，爱从未缺席',
         epilogueSubTitle:
-          '多多与贺贺的旅程，注定漫长而璀璨，也注定写满温柔与期待 !',
+          '贺贺与多多的旅程，漫长而璀璨，写满温柔与期待，在日复一日的陪伴里，生长出最温柔的力量',
         timeAxisPosition: 'right',
         seasonalIndicator: false,
-        animationsEnabled: true
+        animationsEnabled: true,
+        siteMusic: 'you-are-the-reason'
       });
       await config.save();
     }
@@ -28,7 +29,8 @@ export const getUserConfig = async (req, res) => {
       epilogueSubTitle: config.epilogueSubTitle,
       timeAxisPosition: config.timeAxisPosition,
       seasonalIndicator: config.seasonalIndicator,
-      animationsEnabled: config.animationsEnabled
+      animationsEnabled: config.animationsEnabled,
+      siteMusic: config.siteMusic
     });
   } catch (error) {
     console.error('获取用户配置失败:', error);
@@ -49,7 +51,8 @@ export const updateUserConfig = async (req, res) => {
       epilogueSubTitle,
       timeAxisPosition,
       seasonalIndicator,
-      animationsEnabled
+      animationsEnabled,
+      siteMusic
     } = req.body;
 
     // 验证必填字段
@@ -83,6 +86,7 @@ export const updateUserConfig = async (req, res) => {
         seasonalIndicator !== undefined ? seasonalIndicator : false;
       config.animationsEnabled =
         animationsEnabled !== undefined ? animationsEnabled : true;
+      config.siteMusic = siteMusic || 'you-are-the-reason';
       config.updatedAt = new Date();
 
       await config.save();
@@ -97,7 +101,8 @@ export const updateUserConfig = async (req, res) => {
         seasonalIndicator:
           seasonalIndicator !== undefined ? seasonalIndicator : false,
         animationsEnabled:
-          animationsEnabled !== undefined ? animationsEnabled : true
+          animationsEnabled !== undefined ? animationsEnabled : true,
+        siteMusic: siteMusic || 'you-are-the-reason'
       });
 
       await config.save();
@@ -112,7 +117,8 @@ export const updateUserConfig = async (req, res) => {
         epilogueSubTitle: config.epilogueSubTitle,
         timeAxisPosition: config.timeAxisPosition,
         seasonalIndicator: config.seasonalIndicator,
-        animationsEnabled: config.animationsEnabled
+        animationsEnabled: config.animationsEnabled,
+        siteMusic: config.siteMusic
       }
     });
   } catch (error) {

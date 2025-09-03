@@ -27,7 +27,7 @@
 }
 
 /* 输入与可编辑区域允许选择（白名单） */
-input,
+/* input,
 textarea,
 [contenteditable],
 .selectable {
@@ -36,4 +36,4 @@ textarea,
   -ms-user-select: text !important;
   user-select: text !important;
   -webkit-touch-callout: default !important;
-}
+} */
