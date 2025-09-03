@@ -6,7 +6,7 @@
     @touchmove.prevent
   >
     <div
-      class="upload-dialog w-[92vw] max-w-xl md:max-w-4xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg bg-neutral-100 dark:bg-neutral-900 p-4 shadow-lg border border-neutral-300 dark:border-neutral-700"
+      class="upload-dialog w-[92vw] max-w-xl md:max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg bg-neutral-100 dark:bg-neutral-900 p-4 shadow-lg border border-neutral-300 dark:border-neutral-700"
       @wheel.stop
       @touchmove.stop
     >
@@ -165,12 +165,12 @@
                 v-if="media.length > 0"
                 type="button"
                 @click="removeMedia(0)"
-                class="absolute top-2 right-2 z-20 w-7 h-7 bg-neutral-900/80 text-white rounded-full flex items-center justify-center hover:bg-neutral-800 transition-colors border-none"
+                class="absolute top-2 right-2 z-20 w-8 h-8 bg-neutral-900/80 text-white rounded-full flex items-center justify-center hover:bg-neutral-800 transition-colors border-none"
                 style="border: none"
                 :title="UI_TEXTS.upload.deleteImage"
               >
                 <svg
-                  class="w-4 h-4"
+                  class="w-8 h-8"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -189,18 +189,29 @@
           <!-- 右侧：表单输入区域 -->
           <div class="space-y-3 md:space-y-4 md:order-2">
             <div>
-              <input
-                v-model="title"
-                :placeholder="UI_TEXTS.upload.titlePlaceholder"
-                class="w-full px-0 py-2 border-0 bg-transparent text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 outline-none"
-              />
-              <textarea
-                ref="textarea"
-                v-model="content"
-                rows="1"
-                :placeholder="UI_TEXTS.upload.contentPlaceholder"
-                class="w-full px-0 py-0 border-0 bg-transparent text-base leading-relaxed text-neutral-600 dark:text-neutral-300 outline-none resize-none"
-              />
+              <div class="flex items-center gap-2 mb-2">
+                <input
+                  ref="titleInput"
+                  v-model="title"
+                  :placeholder="UI_TEXTS.upload.titlePlaceholder"
+                  @focus="onTitleFocus"
+                  @blur="onTitleBlur"
+                  class="flex-1 px-0 py-2 border-0 bg-transparent text-xl md:text-2xl font-semibold tracking-tight text-neutral-800 dark:text-neutral-200 outline-none"
+                />
+                <!-- Emoji 选择器 -->
+                <EmojiPicker @emoji-select="insertEmoji" />
+              </div>
+              <div class="relative">
+                <textarea
+                  ref="textarea"
+                  v-model="content"
+                  rows="1"
+                  :placeholder="UI_TEXTS.upload.contentPlaceholder"
+                  @focus="onContentFocus"
+                  @blur="onContentBlur"
+                  class="w-full px-0 py-0 border-0 bg-transparent text-base leading-relaxed text-neutral-600 dark:text-neutral-300 outline-none resize-none"
+                />
+              </div>
             </div>
             <!-- 标签输入/展示 与 日期选择 同行两端布局（与故事章节展示一致） -->
             <div class="flex items-center gap-3">
@@ -371,13 +382,14 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, watch, onUnmounted, computed } from "vue";
+import { ref, watch, onUnmounted, computed, nextTick } from "vue";
 import { useTextareaAutosize } from "@vueuse/core";
 import { useTimelineStore } from "../stores/timeline";
 import type { MediaItem } from "../stores/timeline";
 import { useThemeStore } from "../stores/theme";
 import { SITE_MAIN_COLOR } from "../config/siteTheme";
 import { UI_TEXTS } from "../config/texts";
+import EmojiPicker from "./EmojiPicker.vue";
 
 // Props定义
 interface Props {
@@ -391,9 +403,13 @@ const title = ref("");
 const content = ref("");
 // 使用 VueUse 的自适应高度文本域
 const { textarea } = useTextareaAutosize({ input: content as unknown as any });
+const titleInput = ref<HTMLInputElement | null>(null);
 const tags = ref("");
 const tagsEditing = ref(false);
 const tagsBox = ref<HTMLElement | null>(null);
+
+// 聚焦状态管理（用于记录最后聚焦的输入框）
+const lastFocusedInput = ref<"title" | "content" | null>(null);
 
 function onGlobalMouseDown(ev: MouseEvent) {
   if (!tagsEditing.value) return;
@@ -433,6 +449,15 @@ const endTagsEdit = () => {
   // 输入框失焦后切换为展示态，并把模型用空格连接，便于再次编辑
   tags.value = unique.join(" ");
   tagsEditing.value = false;
+};
+
+// 聚焦状态处理方法
+const onTitleFocus = () => {
+  lastFocusedInput.value = "title";
+};
+
+const onContentFocus = () => {
+  lastFocusedInput.value = "content";
 };
 
 const parsedTags = computed(() => {
@@ -763,6 +788,58 @@ function showPreview(item: MediaItem) {
 
 function hidePreview() {
   previewItem.value = null;
+}
+
+// 插入emoji到最后聚焦的输入框中
+function insertEmoji(emoji: string) {
+  if (lastFocusedInput.value === "title" && titleInput.value) {
+    // 插入到标题中
+    const start = titleInput.value.selectionStart || 0;
+    const end = titleInput.value.selectionEnd || 0;
+    const before = title.value.substring(0, start);
+    const after = title.value.substring(end);
+
+    title.value = before + emoji + after;
+
+    // 设置光标位置到emoji后面
+    nextTick(() => {
+      const newPosition = start + emoji.length;
+      titleInput.value?.setSelectionRange(newPosition, newPosition);
+      titleInput.value?.focus();
+    });
+  } else if (lastFocusedInput.value === "content" && textarea.value) {
+    // 插入到内容中
+    const start = textarea.value.selectionStart || 0;
+    const end = textarea.value.selectionEnd || 0;
+    const before = content.value.substring(0, start);
+    const after = content.value.substring(end);
+
+    content.value = before + emoji + after;
+
+    // 设置光标位置到emoji后面
+    nextTick(() => {
+      const newPosition = start + emoji.length;
+      textarea.value?.setSelectionRange(newPosition, newPosition);
+      textarea.value?.focus();
+    });
+  } else {
+    // 如果没有记录最后聚焦的输入框，默认插入到内容中
+    if (textarea.value) {
+      const start = textarea.value.selectionStart || 0;
+      const end = textarea.value.selectionEnd || 0;
+      const before = content.value.substring(0, start);
+      const after = content.value.substring(end);
+
+      content.value = before + emoji + after;
+
+      // 设置光标位置到emoji后面
+      nextTick(() => {
+        const newPosition = start + emoji.length;
+        textarea.value?.setSelectionRange(newPosition, newPosition);
+        textarea.value?.focus();
+      });
+    }
+  }
 }
 
 const previewContainerStyle = computed(() => {
