@@ -49,6 +49,7 @@ export interface TimelineItem {
     aspectRatio?: string;
   }>;
   isPinned?: boolean;
+  isPublic?: boolean;
 }
 
 export interface TimelineResponse {
@@ -70,6 +71,7 @@ export interface CreateTimelineItemRequest {
     aspectRatio?: string;
   }>;
   isPinned?: boolean;
+  isPublic?: boolean;
 }
 
 export interface UpdateTimelineItemRequest

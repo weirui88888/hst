@@ -72,7 +72,13 @@ const settings = useSettingsStore();
 
 // 使用computed响应式获取数据
 const items = computed(() => timelineStore.timelineItems);
-const latestItem = computed(() => items.value?.[0] ?? null);
+const latestItem = computed(() => {
+  // 优先显示置顶故事，如果没有置顶则显示最新故事
+  if (timelineStore.pinnedItem) {
+    return timelineStore.pinnedItem;
+  }
+  return items.value?.[0] ?? null;
+});
 
 // 计算是否有错误
 const hasError = computed(() => timelineStore.error || settings.error);

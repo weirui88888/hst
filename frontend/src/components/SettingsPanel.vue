@@ -74,7 +74,7 @@
 
             <!-- 动画开关 -->
             <div
-              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 md:hidden"
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
@@ -126,6 +126,68 @@
                   >
                     {{
                       animationsEnabled
+                        ? UI_TEXTS.settings.pageAnimation.on
+                        : UI_TEXTS.settings.pageAnimation.off
+                    }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 沉浸式预览（仅移动端生效，本地存储） -->
+            <div
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4
+                    class="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1"
+                  >
+                    {{ UI_TEXTS.settings.immersivePreview.title }}
+                  </h4>
+                  <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                    {{ UI_TEXTS.settings.immersivePreview.description }}
+                  </p>
+                </div>
+                <!-- 圆形checkbox开关 -->
+                <div class="flex items-center">
+                  <button
+                    @click="toggleImmersivePreview"
+                    class="relative w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none overflow-hidden border-none"
+                    :style="
+                      immersivePreviewEnabled
+                        ? {
+                            backgroundColor: 'var(--site-main-color)',
+                            boxShadow: `0 0 0 4px var(--site-main-color-30)`,
+                          }
+                        : {}
+                    "
+                    :class="
+                      !immersivePreviewEnabled
+                        ? 'bg-neutral-600 dark:bg-neutral-500 hover:bg-neutral-500 dark:hover:bg-neutral-400'
+                        : ''
+                    "
+                  >
+                    <!-- 选中状态的对勾图标 -->
+                    <svg
+                      v-if="immersivePreviewEnabled"
+                      class="w-3 h-3 text-white transition-all duration-200 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <!-- 状态指示文字 -->
+                  <span
+                    class="ml-2 text-xs text-neutral-500 dark:text-neutral-400"
+                  >
+                    {{
+                      immersivePreviewEnabled
                         ? UI_TEXTS.settings.pageAnimation.on
                         : UI_TEXTS.settings.pageAnimation.off
                     }}
@@ -496,6 +558,7 @@ import { SITE_MUSIC_OPTIONS } from "../config/musicCatalog";
 const emit = defineEmits([
   "update:seasonalIndicator",
   "update:animationsEnabled",
+  "update:immersivePreviewEnabled",
   "update:modelValue",
   "update:timeAxisPosition",
   "update:siteTitle",
@@ -509,6 +572,7 @@ const emit = defineEmits([
 const props = defineProps<{
   seasonalIndicator?: boolean;
   animationsEnabled?: boolean;
+  immersivePreviewEnabled?: boolean;
   timeAxisPosition?: string;
   modelValue?: boolean;
   siteTitle?: string;
@@ -599,6 +663,14 @@ const musicAutoPlay = computed({
     hasChanges.value = true;
   },
 });
+
+const immersivePreviewEnabled = computed({
+  get: () => props.immersivePreviewEnabled ?? true,
+  set: (v: boolean) => {
+    emit("update:immersivePreviewEnabled", v);
+    // 本地开关不计入 API 更新
+  },
+});
 const isOpen = computed({
   get: (): boolean => !!props.modelValue,
   set: (value: boolean) => emit("update:modelValue", value),
@@ -632,6 +704,10 @@ const toggleAnimationsEnabled = () => {
 const toggleMusicAutoPlay = () => {
   emit("update:musicAutoPlay", !props.musicAutoPlay);
   hasChanges.value = true;
+};
+
+const toggleImmersivePreview = () => {
+  emit("update:immersivePreviewEnabled", !immersivePreviewEnabled.value);
 };
 
 const setLocalMusic = (m: "you-are-the-reason" | "bleeding-love") => {

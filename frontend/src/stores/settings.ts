@@ -75,6 +75,16 @@ const getInitialMusicAutoPlay = (): boolean => {
   }
 };
 
+// 沉浸式预览（仅本地控制，默认开启）
+const getInitialImmersivePreviewEnabled = (): boolean => {
+  try {
+    const stored = localStorage.getItem("hst_immersive_preview");
+    return stored !== null ? JSON.parse(stored) : true;
+  } catch {
+    return true;
+  }
+};
+
 const getInitialMasterMode = (): boolean => {
   try {
     const saved = localStorage.getItem(HST_APP_IS_MASTER);
@@ -102,6 +112,7 @@ export const useSettingsStore = defineStore("settings", {
     epilogueMainTitle: getInitialEpilogueMainTitle(),
     epilogueSubTitle: getInitialEpilogueSubTitle(),
     musicAutoPlay: getInitialMusicAutoPlay(),
+    immersivePreviewEnabled: getInitialImmersivePreviewEnabled(),
     animationsEnabled: true,
     loading: false,
     error: null as string | null,
@@ -248,6 +259,20 @@ export const useSettingsStore = defineStore("settings", {
       // 音乐自动播放设置只保存在本地，不标记为需要API更新
     },
 
+    // 仅本地：沉浸式预览开关（默认开启）
+    setImmersivePreviewEnabled(enabled: boolean) {
+      this.immersivePreviewEnabled = enabled;
+      try {
+        localStorage.setItem("hst_immersive_preview", JSON.stringify(enabled));
+      } catch (error) {
+        console.warn(
+          "Failed to save immersive preview to localStorage:",
+          error,
+        );
+      }
+      // 不走用户配置接口
+    },
+
     setAnimationsEnabled(enabled: boolean) {
       this.animationsEnabled = enabled;
       this.markAsChanged();
@@ -285,6 +310,13 @@ export const useSettingsStore = defineStore("settings", {
       this.saveEpilogueSubTitle();
       this.saveMusicAutoPlay();
       this.saveSiteMusicKey();
+      // 沉浸式预览也同步保存（虽然不依赖API）
+      try {
+        localStorage.setItem(
+          "hst_immersive_preview",
+          JSON.stringify(this.immersivePreviewEnabled),
+        );
+      } catch {}
     },
 
     saveTimeAxisPosition() {

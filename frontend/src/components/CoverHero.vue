@@ -1,8 +1,8 @@
 <template>
   <section class="py-10 md:py-14">
-    <div v-if="latest" class="grid md:grid-cols-2 gap-6 items-center">
+    <div v-if="latest" class="grid md:grid-cols-2 gap-6">
       <div
-        class="rounded-xl overflow-hidden aspect-video bg-neutral-200/60 dark:bg-neutral-800/60"
+        class="rounded-xl overflow-hidden bg-neutral-200/60 dark:bg-neutral-800/60"
       >
         <MediaPreview :media="latest.media" />
       </div>
@@ -46,6 +46,19 @@ import { UI_TEXTS } from "../config/texts";
 
 const { latest: latestProp } = defineProps<{ latest?: TimelineItem | null }>();
 const latest = computed(() => latestProp ?? null);
+
+// 根据真实宽高比计算封面容器的 aspect-ratio（无则回退 16/9）
+const coverAspectStyle = computed(() => {
+  const media = latest.value?.media?.[0] as any;
+  const ratio = media?.aspectRatio as string | undefined;
+  if (ratio && /^(\d+\/?\d+)$/.test(ratio)) {
+    // 支持 "w/h" 或单个数字（不太常见）
+    if (ratio.includes("/")) {
+      return { aspectRatio: ratio } as Record<string, string>;
+    }
+  }
+  return { aspectRatio: "16 / 9" } as Record<string, string>;
+});
 
 // 格式化日期，只显示年月日
 const formatDate = (dateValue: Date | string) => {

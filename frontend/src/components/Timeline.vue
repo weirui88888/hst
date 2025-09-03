@@ -40,7 +40,7 @@
 
       <div class="space-y-16">
         <article
-          v-for="(item, index) in props.items || []"
+          v-for="(item, index) in visibleItems"
           :key="`${item.id}-${props.animationsEnabled}`"
           :ref="(el) => setSectionRef(el, index)"
           class="relative will-change-transform"
@@ -95,15 +95,21 @@
                 <div>
                   <div class="group relative">
                     <h3
-                      class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 pr-20"
+                      class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 pr-32"
                     >
                       {{ item.title }}
+                      <span
+                        v-if="item.isPinned"
+                        class="ml-2 align-middle text-[11px] font-medium text-orange-600 dark:text-orange-400 select-none"
+                      >
+                        📌置顶
+                      </span>
                     </h3>
                     <!-- 主人模式下的编辑按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
                     <button
-                      v-if="isMasterMode"
+                      v-if="isMasterMode && showMobileButtons"
                       @click="onEditButtonClick(item)"
-                      class="absolute top-0 right-8 w-6 h-6 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all duration-200 border-none shadow-sm opacity-0 md:group-hover:opacity-100 md:opacity-0"
+                      class="absolute top-0 right-24 w-6 h-6 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :title="'编辑故事'"
                     >
                       <svg
@@ -120,11 +126,108 @@
                         />
                       </svg>
                     </button>
+                    <!-- 主人模式下的可见性控制按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
+                    <button
+                      v-if="isMasterMode && showMobileButtons"
+                      @click="onVisibilityToggleClick(item)"
+                      class="absolute top-0 right-16 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      :class="[
+                        item.isPublic
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 hover:text-green-700 dark:hover:text-green-300'
+                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-800/50 hover:text-orange-700 dark:hover:text-orange-300',
+                      ]"
+                      :title="item.isPublic ? '设为私密' : '设为公开'"
+                    >
+                      <svg
+                        v-if="item.isPublic"
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M1 1l22 22"
+                        />
+                      </svg>
+                    </button>
+                    <!-- 主人模式下的置顶按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
+                    <button
+                      v-if="isMasterMode && showMobileButtons"
+                      @click="onPinToggleClick(item)"
+                      class="absolute top-0 right-8 w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-200 border shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      :style="pinButtonVars"
+                      :class="
+                        item.isPinned
+                          ? 'bg-[color:var(--pin-bg)] hover:bg-[color:var(--pin-bg-hover)] border-none'
+                          : 'bg-[color:var(--pin-bg)] hover:bg-[color:var(--pin-bg-hover)] border-none'
+                      "
+                      :title="item.isPinned ? '取消置顶' : '设为置顶'"
+                    >
+                      <svg
+                        v-if="item.isPinned"
+                        class="w-3 h-3"
+                        :style="{ color: 'var(--pin-color)' }"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        class="w-3 h-3"
+                        :style="{ color: 'var(--pin-color)' }"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        />
+                      </svg>
+                    </button>
                     <!-- 主人模式下的删除按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
                     <button
-                      v-if="isMasterMode"
+                      v-if="isMasterMode && showMobileButtons"
                       @click="onDeleteButtonClick(item)"
-                      class="absolute top-0 right-0 w-6 h-6 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 border-none shadow-sm opacity-0 md:group-hover:opacity-100 md:opacity-0"
+                      class="absolute top-0 right-0 w-6 h-6 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :title="'删除故事'"
                     >
                       <svg
@@ -196,6 +299,7 @@ import { useSettingsStore } from "../stores/settings";
 import { useTimelineStore } from "../stores/timeline";
 import { useToast } from "../utils/toast";
 import { UI_TEXTS } from "../config/texts";
+import { SITE_MAIN_COLOR } from "../config/siteTheme";
 
 const props = defineProps<{
   items?: any[];
@@ -203,6 +307,19 @@ const props = defineProps<{
   animationsEnabled?: boolean;
   timeAxisPosition?: string;
 }>();
+
+// 根据可见性过滤显示的故事章节
+const visibleItems = computed(() => {
+  if (!props.items) return [];
+
+  // 主人模式下显示所有故事章节
+  if (isMasterMode.value) {
+    return props.items;
+  }
+
+  // 非主人模式下只显示公开的故事章节
+  return props.items.filter((item) => item.isPublic !== false);
+});
 
 const activeIndex = ref<number>(-1);
 const sectionRefs = ref<HTMLElement[]>([]);
@@ -225,6 +342,12 @@ const isMasterMode = computed<boolean>({
   get: () => settingsStore.isMasterMode,
   set: (val: boolean) => settingsStore.setMasterMode(val),
 });
+// 仅移动端：当沉浸式预览关闭时，显示图片左下角按钮；开启时隐藏
+const showMobileButtons = computed<boolean>(() => {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  if (!isMobile) return true; // 桌面端逻辑不变
+  return !settingsStore.immersivePreviewEnabled; // 关闭沉浸式时才显示
+});
 
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
@@ -234,6 +357,21 @@ if (typeof window !== "undefined") {
   });
 }
 
+// 置顶按钮颜色（图标/背景/边框/hover）基于站点主色，使用透明度区分
+const pinButtonVars = computed(() => {
+  const hex = SITE_MAIN_COLOR || "#ea580c";
+  const rgb = hex.replace("#", "");
+  const r = parseInt(rgb.substring(0, 2), 16) || 234;
+  const g = parseInt(rgb.substring(2, 4), 16) || 88;
+  const b = parseInt(rgb.substring(4, 6), 16) || 12;
+  return {
+    "--pin-color": `rgba(${r}, ${g}, ${b}, 0.95)`,
+    "--pin-bg": `rgba(${r}, ${g}, ${b}, 0.12)`,
+    "--pin-bg-hover": `rgba(${r}, ${g}, ${b}, 0.22)`,
+    "--pin-border": `rgba(${r}, ${g}, ${b}, 0.35)`,
+  } as CSSProperties;
+});
+
 // 主人模式下，点击编辑按钮触发编辑
 const editDialogOpen = ref(false);
 const editItem = ref<any | null>(null);
@@ -242,6 +380,29 @@ function onEditButtonClick(item: any) {
   if (!isMasterMode.value) return;
   editItem.value = item;
   editDialogOpen.value = true;
+}
+
+async function onVisibilityToggleClick(item: any) {
+  if (!isMasterMode.value) return;
+
+  try {
+    // 切换可见性
+    const newVisibility = !item.isPublic;
+
+    // 调用更新API
+    await timelineStore.updateItem(item.id, {
+      isPublic: newVisibility,
+    });
+
+    // 更新本地数据
+    item.isPublic = newVisibility;
+
+    // 显示成功提示
+    toast.success(newVisibility ? "已设为公开" : "已设为私密");
+  } catch (error) {
+    console.error("切换可见性失败:", error);
+    toast.error("操作失败，请重试");
+  }
 }
 
 async function onDeleteButtonClick(item: any) {
@@ -260,12 +421,39 @@ async function onDeleteButtonClick(item: any) {
   }
 }
 
+async function onPinToggleClick(item: any) {
+  if (!isMasterMode.value) return;
+
+  try {
+    // 切换置顶状态
+    const newPinState = !item.isPinned;
+
+    // 调用更新API
+    await timelineStore.updateItem(item.id, {
+      isPinned: newPinState,
+    });
+
+    // 更新本地数据
+    item.isPinned = newPinState;
+
+    // 显示成功提示
+    toast.success(newPinState ? "已设为置顶" : "已取消置顶");
+  } catch (error) {
+    console.error("切换置顶状态失败:", error);
+    toast.error("操作失败，请重试");
+  }
+}
+
 const timeAxisPositionStyle = computed(() => {
-  if (activeIndex.value === -1 || !props.items || props.items.length === 0) {
+  if (
+    activeIndex.value === -1 ||
+    !visibleItems.value ||
+    visibleItems.value.length === 0
+  ) {
     return { top: "50%" } as CSSProperties;
   }
 
-  const baseProgress = activeIndex.value / (props.items.length - 1);
+  const baseProgress = activeIndex.value / (visibleItems.value.length - 1);
   const ratioPad = Math.max(0, Math.min(0.49, axisEndPaddingRatio.value));
   const mappedProgress = ratioPad + baseProgress * (1 - 2 * ratioPad);
 
@@ -283,10 +471,14 @@ const timeAxisLabelStyle = computed(() => {
 });
 
 const currentTimeDisplay = computed(() => {
-  if (activeIndex.value === -1 || !props.items || props.items.length === 0) {
+  if (
+    activeIndex.value === -1 ||
+    !visibleItems.value ||
+    visibleItems.value.length === 0
+  ) {
     return "";
   }
-  const currentItem = props.items[activeIndex.value];
+  const currentItem = visibleItems.value[activeIndex.value];
   const date = currentItem?.date || "";
   if ((props.seasonalIndicator ?? false) && date) {
     const month = getMonthFromDate(date);
@@ -339,11 +531,13 @@ const onDrag = (event: MouseEvent | TouchEvent) => {
     0,
     Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)),
   );
-  const newIndex = Math.round(baseProgress * ((props.items?.length || 0) - 1));
+  const newIndex = Math.round(
+    baseProgress * ((visibleItems.value?.length || 0) - 1),
+  );
   if (
     newIndex !== activeIndex.value &&
     newIndex >= 0 &&
-    newIndex < (props.items?.length || 0)
+    newIndex < (visibleItems.value?.length || 0)
   ) {
     activeIndex.value = newIndex;
   }
@@ -391,8 +585,10 @@ const handleTimelineClick = (event: MouseEvent) => {
     0,
     Math.min(1, (rawProgress - ratioPad) / (1 - 2 * ratioPad)),
   );
-  const newIndex = Math.round(baseProgress * ((props.items?.length || 0) - 1));
-  if (newIndex >= 0 && newIndex < (props.items?.length || 0)) {
+  const newIndex = Math.round(
+    baseProgress * ((visibleItems.value?.length || 0) - 1),
+  );
+  if (newIndex >= 0 && newIndex < (visibleItems.value?.length || 0)) {
     activeIndex.value = newIndex;
     scrollToStory(newIndex);
   }
@@ -453,9 +649,9 @@ const updateActive = () => {
   }
   if (
     bottomGap <= edgeThreshold &&
-    activeIndex.value !== (props.items?.length || 0) - 1
+    activeIndex.value !== (visibleItems.value?.length || 0) - 1
   ) {
-    activeIndex.value = (props.items?.length || 0) - 1;
+    activeIndex.value = (visibleItems.value?.length || 0) - 1;
     return;
   }
   const viewportCenter = window.innerHeight / 2;

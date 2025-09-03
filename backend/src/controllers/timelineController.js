@@ -15,7 +15,8 @@ export const getTimelineItems = async (req, res) => {
       tags: item.tags || [],
       date: item.date,
       media: item.media || [],
-      isPinned: item.isPinned || false
+      isPinned: item.isPinned !== undefined ? item.isPinned : false,
+      isPublic: item.isPublic !== undefined ? item.isPublic : true
     }));
 
     res.json({
@@ -58,7 +59,7 @@ export const getPinnedItem = async (req, res) => {
 // 创建时间轴项目
 export const createTimelineItem = async (req, res) => {
   try {
-    const { title, content, tags, date, media, isPinned } = req.body;
+    const { title, content, tags, date, media, isPinned, isPublic } = req.body;
 
     // 验证必填字段
     if (!title || !content || !date) {
@@ -99,7 +100,8 @@ export const createTimelineItem = async (req, res) => {
       tags: tags || [],
       date: dateObj,
       media: media || [],
-      isPinned: isPinned || false
+      isPinned: isPinned || false,
+      isPublic: isPublic !== undefined ? isPublic : true
     });
 
     await timelineItem.save();
@@ -113,7 +115,8 @@ export const createTimelineItem = async (req, res) => {
         tags: timelineItem.tags,
         date: timelineItem.date,
         media: timelineItem.media,
-        isPinned: timelineItem.isPinned
+        isPinned: timelineItem.isPinned,
+        isPublic: timelineItem.isPublic
       }
     });
   } catch (error) {
@@ -129,7 +132,7 @@ export const createTimelineItem = async (req, res) => {
 export const updateTimelineItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, tags, date, media, isPinned } = req.body;
+    const { title, content, tags, date, media, isPinned, isPublic } = req.body;
 
     const timelineItem = await TimelineItem.findById(id);
     if (!timelineItem) {
@@ -171,6 +174,7 @@ export const updateTimelineItem = async (req, res) => {
     }
     if (media !== undefined) timelineItem.media = media;
     if (isPinned !== undefined) timelineItem.isPinned = isPinned;
+    if (isPublic !== undefined) timelineItem.isPublic = isPublic;
 
     await timelineItem.save();
 
@@ -183,7 +187,8 @@ export const updateTimelineItem = async (req, res) => {
         tags: timelineItem.tags,
         date: timelineItem.date,
         media: timelineItem.media,
-        isPinned: timelineItem.isPinned
+        isPinned: timelineItem.isPinned,
+        isPublic: timelineItem.isPublic
       }
     });
   } catch (error) {

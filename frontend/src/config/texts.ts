@@ -17,6 +17,10 @@ export const UI_TEXTS = {
     pageSettings: "页面设置",
     timelineSettings: "时间轴设置",
     otherSettings: "其他设置",
+    immersivePreview: {
+      title: "沉浸式预览",
+      description: "开启时隐藏操作按钮，获得更沉浸的浏览；关闭时显示按钮",
+    },
 
     // 页面动画
     pageAnimation: {

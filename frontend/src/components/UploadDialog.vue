@@ -779,6 +779,7 @@ function onSubmit() {
     tags: tagList,
     date: date.value instanceof Date ? date.value : new Date(date.value),
     media: media.value,
+    isPublic: true, // 默认设置为公开可见
   } as any;
 
   if (props.isEdit && props.initialItem && props.initialItem.id) {
