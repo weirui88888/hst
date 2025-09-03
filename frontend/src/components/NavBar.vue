@@ -237,7 +237,7 @@ const showExtraButtons = computed<boolean>({
 });
 
 let longPressTimer: number | null = null;
-const LONG_PRESS_MS = 5000; // 5秒
+const LONG_PRESS_MS = 8000; // 8秒
 
 function clearLongPressTimer() {
   if (longPressTimer !== null) {

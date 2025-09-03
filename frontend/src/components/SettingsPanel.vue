@@ -74,7 +74,7 @@
 
             <!-- 动画开关 -->
             <div
-              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 md:hidden"
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 hidden md:block"
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">
@@ -136,7 +136,7 @@
 
             <!-- 沉浸式预览（仅移动端生效，本地存储） -->
             <div
-              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600"
+              class="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-300 dark:border-neutral-600 md:hidden"
             >
               <div class="flex items-center justify-between">
                 <div class="flex-1">

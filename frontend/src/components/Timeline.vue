@@ -95,7 +95,8 @@
                 <div>
                   <div class="group relative">
                     <h3
-                      class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 pr-32"
+                      class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 md:pr-32"
+                      :class="isMasterMode && showMobileButtons ? 'pr-32' : ''"
                     >
                       {{ item.title }}
                       <span
@@ -109,11 +110,11 @@
                     <button
                       v-if="isMasterMode && showMobileButtons"
                       @click="onEditButtonClick(item)"
-                      class="absolute top-0 right-24 w-6 h-6 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      class="absolute top-0 right-24 w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :title="'编辑故事'"
                     >
                       <svg
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -130,7 +131,7 @@
                     <button
                       v-if="isMasterMode && showMobileButtons"
                       @click="onVisibilityToggleClick(item)"
-                      class="absolute top-0 right-16 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      class="absolute top-0 right-16 w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :class="[
                         item.isPublic
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 hover:text-green-700 dark:hover:text-green-300'
@@ -140,7 +141,7 @@
                     >
                       <svg
                         v-if="item.isPublic"
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -160,7 +161,7 @@
                       </svg>
                       <svg
                         v-else
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -183,7 +184,7 @@
                     <button
                       v-if="isMasterMode && showMobileButtons"
                       @click="onPinToggleClick(item)"
-                      class="absolute top-0 right-8 w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-200 border shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      class="absolute top-0 right-8 w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-colors duration-200 border shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :style="pinButtonVars"
                       :class="
                         item.isPinned
@@ -194,7 +195,7 @@
                     >
                       <svg
                         v-if="item.isPinned"
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         :style="{ color: 'var(--pin-color)' }"
                         fill="currentColor"
                         stroke="currentColor"
@@ -209,7 +210,7 @@
                       </svg>
                       <svg
                         v-else
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         :style="{ color: 'var(--pin-color)' }"
                         fill="none"
                         stroke="currentColor"
@@ -227,11 +228,11 @@
                     <button
                       v-if="isMasterMode && showMobileButtons"
                       @click="onDeleteButtonClick(item)"
-                      class="absolute top-0 right-0 w-6 h-6 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                      class="absolute top-0 right-0 w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 border-none shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100"
                       :title="'删除故事'"
                     >
                       <svg
-                        class="w-3 h-3"
+                        class="w-6 h-6 md:w-3 md:h-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
