@@ -80,7 +80,6 @@
                         ? 'transition-all duration-300 animations-enabled'
                         : '',
                     ]"
-                    @click="onItemImageClick(item)"
                   >
                     <MediaPreview :media="item.media" />
                   </div>
@@ -94,11 +93,55 @@
                 v-gsap="textAnimationProps(index)"
               >
                 <div>
-                  <h3
-                    class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200"
-                  >
-                    {{ item.title }}
-                  </h3>
+                  <div class="group relative">
+                    <h3
+                      class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200 pr-20"
+                    >
+                      {{ item.title }}
+                    </h3>
+                    <!-- 主人模式下的编辑按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
+                    <button
+                      v-if="isMasterMode"
+                      @click="onEditButtonClick(item)"
+                      class="absolute top-0 right-8 w-6 h-6 rounded-full flex items-center justify-center bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 transition-all duration-200 border-none shadow-sm opacity-0 md:group-hover:opacity-100 md:opacity-0"
+                      :title="'编辑故事'"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                    <!-- 主人模式下的删除按钮 - 桌面端悬停标题时显示，移动端始终显示 -->
+                    <button
+                      v-if="isMasterMode"
+                      @click="onDeleteButtonClick(item)"
+                      class="absolute top-0 right-0 w-6 h-6 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 border-none shadow-sm opacity-0 md:group-hover:opacity-100 md:opacity-0"
+                      :title="'删除故事'"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                   <div
                     class="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap"
                   >
@@ -150,6 +193,8 @@ type CSSProperties = Partial<CSSStyleDeclaration>;
 import MediaPreview from "./MediaPreview.vue";
 import UploadDialog from "./UploadDialog.vue";
 import { useSettingsStore } from "../stores/settings";
+import { useTimelineStore } from "../stores/timeline";
+import { useToast } from "../utils/toast";
 import { UI_TEXTS } from "../config/texts";
 
 const props = defineProps<{
@@ -172,6 +217,8 @@ const axisEndPaddingRatio = ref<number>(0.1);
 const axisPaddingPx = ref<number>(16);
 
 const settingsStore = useSettingsStore();
+const timelineStore = useTimelineStore();
+const toast = useToast();
 
 // 主人模式：使用 Pinia 同步；保留 storage 事件用于跨标签页同步
 const isMasterMode = computed<boolean>({
@@ -187,32 +234,29 @@ if (typeof window !== "undefined") {
   });
 }
 
-// 主人模式下，三击图片触发编辑
+// 主人模式下，点击编辑按钮触发编辑
 const editDialogOpen = ref(false);
 const editItem = ref<any | null>(null);
-const lastClickedItemId = ref<string | null>(null);
-const lastClickTimestamp = ref<number>(0);
-const clickCount = ref<number>(0);
-const CLICK_INTERVAL_MS = 600;
 
-function onItemImageClick(item: any) {
+function onEditButtonClick(item: any) {
   if (!isMasterMode.value) return;
-  const now = Date.now();
-  if (
-    lastClickedItemId.value === item.id &&
-    now - lastClickTimestamp.value <= CLICK_INTERVAL_MS
-  ) {
-    clickCount.value += 1;
-  } else {
-    lastClickedItemId.value = item.id;
-    clickCount.value = 1;
-  }
-  lastClickTimestamp.value = now;
+  editItem.value = item;
+  editDialogOpen.value = true;
+}
 
-  if (clickCount.value >= 3) {
-    editItem.value = item;
-    editDialogOpen.value = true;
-    clickCount.value = 0;
+async function onDeleteButtonClick(item: any) {
+  if (!isMasterMode.value) return;
+
+  try {
+    // 直接调用删除API
+    await timelineStore.deleteItem(item.id);
+
+    // 删除成功toast提示
+    toast.success(UI_TEXTS.toast.deleteSuccess);
+  } catch (error) {
+    console.error("删除故事失败:", error);
+    // 删除失败toast提示
+    toast.error(UI_TEXTS.toast.deleteFailed);
   }
 }
 
@@ -872,6 +916,30 @@ onBeforeUnmount(() => {
   .timeline-image.animations-enabled:hover {
     transform: none !important;
     box-shadow: none !important;
+  }
+}
+
+/* 标题悬停编辑按钮样式 */
+.group:hover button {
+  transform: scale(1.05);
+}
+
+/* 确保按钮在悬停时有平滑的过渡效果 */
+.group button {
+  transition: all 0.2s ease;
+}
+
+/* 暗色主题下编辑按钮的阴影效果 */
+@media (prefers-color-scheme: dark) {
+  .timeline-image button {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* 浅色主题下编辑按钮的阴影效果 */
+@media (prefers-color-scheme: light) {
+  .timeline-image button {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 }
 </style>

@@ -127,6 +127,8 @@ export const UI_TEXTS = {
     uploadSuccess: "我们的回忆又+1😊",
     updateSuccess: "调整完成",
     updateFailed: "调整失败，请重试",
+    deleteSuccess: "删除完成",
+    deleteFailed: "删除失败，请重试",
     extraButtonsUnlocked: "已开启主人模式",
     extraButtonsHidden: "已关闭主人模式",
   },
