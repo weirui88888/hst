@@ -87,6 +87,7 @@ export const UI_TEXTS = {
   // 上传弹窗
   upload: {
     title: "录入",
+    editTitle: "调整",
     desktopUploadHint: "点击或拖拽图片到此处上传",
     mobileUploadHint: "点击选择图片到此处上传",
     deleteImage: "删除已上传图片",
@@ -96,6 +97,7 @@ export const UI_TEXTS = {
     tagsPlaceholder: "请输入标签，支持空格或逗号分隔",
     datePlaceholder: "选择日期 YYYY-MM-DD",
     saveButton: "录入",
+    updateButton: "调整",
   },
 
   // Emoji 选择器
@@ -114,6 +116,10 @@ export const UI_TEXTS = {
     saveSuccess: "保存成功",
     configUpdated: "配置已更新",
     uploadSuccess: "我们的回忆又+1😊",
+    updateSuccess: "调整完成",
+    updateFailed: "调整失败，请重试",
+    extraButtonsUnlocked: "已开启主人模式",
+    extraButtonsHidden: "已关闭主人模式",
   },
 
   // 故事延续文案（默认值，实际使用配置中的值）

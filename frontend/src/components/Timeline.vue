@@ -1,140 +1,146 @@
 <template>
-  <section class="relative py-8">
-    <!-- 时间轴线 -->
-    <div
-      class="fixed top-1/2 -translate-y-1/2 z-50 hidden md:block transition-all duration-300"
-      :class="props.timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
-    >
-      <div class="relative timeline-axis">
-        <!-- 时间轴竖线 -->
-        <div
-          class="w-0.5 h-64 timeline-axis-line mx-auto cursor-pointer"
-          @click="handleTimelineClick"
-        ></div>
+  <div>
+    <section class="relative py-8">
+      <!-- 时间轴线 -->
+      <div
+        class="fixed top-1/2 -translate-y-1/2 z-50 hidden md:block transition-all duration-300"
+        :class="props.timeAxisPosition === 'left' ? 'left-8' : 'right-8'"
+      >
+        <div class="relative timeline-axis">
+          <!-- 时间轴竖线 -->
+          <div
+            class="w-0.5 h-64 timeline-axis-line mx-auto cursor-pointer"
+            @click="handleTimelineClick"
+          ></div>
 
-        <!-- 当前时间点 -->
-        <div
-          class="absolute left-1/2 w-3 h-3 bg-neutral-600 dark:bg-neutral-400 rounded-full border-2 border-neutral-900 dark:border-neutral-100 -translate-x-1/2 -translate-y-1/2 transition-all duration-200 timeline-axis-point cursor-pointer hover:scale-110 hover:bg-neutral-500 dark:hover:bg-neutral-300"
-          :class="{ 'duration-0': isDragging || isAutoScrolling }"
-          :style="timeAxisPositionStyle"
-          @mousedown="startDrag"
-          @touchstart="startDrag"
-        ></div>
+          <!-- 当前时间点 -->
+          <div
+            class="absolute left-1/2 w-3 h-3 bg-neutral-600 dark:bg-neutral-400 rounded-full border-2 border-neutral-900 dark:border-neutral-100 -translate-x-1/2 -translate-y-1/2 transition-all duration-200 timeline-axis-point cursor-pointer hover:scale-110 hover:bg-neutral-500 dark:hover:bg-neutral-300"
+            :class="{ 'duration-0': isDragging || isAutoScrolling }"
+            :style="timeAxisPositionStyle"
+            @mousedown="startDrag"
+            @touchstart="startDrag"
+          ></div>
 
-        <!-- 当前时间显示 -->
-        <div
-          class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-200 timeline-time"
-          :class="[
-            props.timeAxisPosition === 'left'
-              ? 'left-6 text-right'
-              : 'right-6 text-left',
-            isDragging || isAutoScrolling ? 'duration-0' : '',
-          ]"
-          :style="[timeAxisPositionStyle, timeAxisLabelStyle]"
-        >
-          {{ currentTimeDisplay }}
+          <!-- 当前时间显示 -->
+          <div
+            class="absolute top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 text-sm font-medium whitespace-nowrap transition-all duration-200 timeline-time"
+            :class="[
+              props.timeAxisPosition === 'left'
+                ? 'left-6 text-right'
+                : 'right-6 text-left',
+              isDragging || isAutoScrolling ? 'duration-0' : '',
+            ]"
+            :style="[timeAxisPositionStyle, timeAxisLabelStyle]"
+          >
+            {{ currentTimeDisplay }}
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="space-y-16">
-      <article
-        v-for="(item, index) in props.items || []"
-        :key="`${item.id}-${props.animationsEnabled}`"
-        :ref="(el) => setSectionRef(el, index)"
-        class="relative will-change-transform"
-        :class="[
-          props.animationsEnabled ? 'transition-all duration-500' : '',
-          articleClass(index),
-        ]"
-      >
-        <!-- 故事内容 -->
-        <div
-          class="relative max-w-4xl mx-auto"
+      <div class="space-y-16">
+        <article
+          v-for="(item, index) in props.items || []"
+          :key="`${item.id}-${props.animationsEnabled}`"
+          :ref="(el) => setSectionRef(el, index)"
+          class="relative will-change-transform"
           :class="[
-            props.animationsEnabled
-              ? 'transition-all duration-700 ease-out'
-              : '',
-            storyClass(index),
+            props.animationsEnabled ? 'transition-all duration-500' : '',
+            articleClass(index),
           ]"
         >
+          <!-- 故事内容 -->
           <div
-            class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-start"
-            :class="layoutClass(index)"
+            class="relative max-w-4xl mx-auto"
+            :class="[
+              props.animationsEnabled
+                ? 'transition-all duration-700 ease-out'
+                : '',
+              storyClass(index),
+            ]"
           >
-            <!-- 图片区域 -->
             <div
-              class="relative"
-              :class="imageOrderClass(index)"
-              v-gsap="imageAnimationProps(index)"
+              class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-start"
+              :class="layoutClass(index)"
             >
+              <!-- 图片区域 -->
               <div
-                class="w-full rounded-2xl overflow-hidden md:overflow-visible p-0 md:p-8"
+                class="relative"
+                :class="imageOrderClass(index)"
+                v-gsap="imageAnimationProps(index)"
               >
                 <div
-                  :style="imageFrameStyle(item)"
-                  class="timeline-image w-full rounded-xl overflow-hidden"
-                  :class="[
-                    props.animationsEnabled
-                      ? 'transition-all duration-300 animations-enabled'
-                      : '',
-                  ]"
+                  class="w-full rounded-2xl overflow-hidden md:overflow-visible p-0 md:p-8"
                 >
-                  <MediaPreview :media="item.media" />
-                </div>
-              </div>
-            </div>
-
-            <!-- 文字区域 -->
-            <div
-              class="space-y-3 md:space-y-4 px-4 md:px-0"
-              :class="textOrderClass(index)"
-              v-gsap="textAnimationProps(index)"
-            >
-              <div>
-                <h3
-                  class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200"
-                >
-                  {{ item.title }}
-                </h3>
-                <div
-                  class="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap"
-                >
-                  {{ item.content }}
+                  <div
+                    :style="imageFrameStyle(item)"
+                    class="timeline-image w-full rounded-xl overflow-hidden"
+                    :class="[
+                      props.animationsEnabled
+                        ? 'transition-all duration-300 animations-enabled'
+                        : '',
+                    ]"
+                    @click="onItemImageClick(item)"
+                  >
+                    <MediaPreview :media="item.media" />
+                  </div>
                 </div>
               </div>
 
-              <div class="flex flex-wrap gap-2 items-center">
-                <span
-                  class="px-3 py-1 rounded-md bg-neutral-700 text-neutral-300 text-xs font-medium"
-                  v-for="tag in item.tags"
-                  :key="tag"
-                  >#{{ tag }}</span
-                >
-                <span
-                  class="ml-auto text-sm text-neutral-500 dark:text-neutral-400 font-medium"
-                  >{{ formatDate(item.date) }}</span
-                >
+              <!-- 文字区域 -->
+              <div
+                class="space-y-3 md:space-y-4 px-4 md:px-0"
+                :class="textOrderClass(index)"
+                v-gsap="textAnimationProps(index)"
+              >
+                <div>
+                  <h3
+                    class="text-xl md:text-2xl font-semibold mb-2 tracking-tight text-neutral-800 dark:text-neutral-200"
+                  >
+                    {{ item.title }}
+                  </h3>
+                  <div
+                    class="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap"
+                  >
+                    {{ item.content }}
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 items-center">
+                  <span
+                    class="px-3 py-1 rounded-md bg-neutral-700 text-neutral-300 text-xs font-medium"
+                    v-for="tag in item.tags"
+                    :key="tag"
+                    >#{{ tag }}</span
+                  >
+                  <span
+                    class="ml-auto text-sm text-neutral-500 dark:text-neutral-400 font-medium"
+                    >{{ formatDate(item.date) }}</span
+                  >
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </article>
-      <!-- 时间轴结尾标记 -->
-      <div class="mt-20 flex flex-col items-center select-none">
-        <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
-        <div
-          class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500"
-        >
-          『
-          {{
-            settingsStore.siteEndText || UI_TEXTS.settings.endText.default
-          }}
-          』
+        </article>
+        <!-- 时间轴结尾标记 -->
+        <div class="mt-20 flex flex-col items-center select-none">
+          <div class="h-px w-24 bg-neutral-300/50 dark:bg-neutral-700/60"></div>
+          <div
+            class="mt-3 text-sm tracking-wide text-neutral-400 dark:text-neutral-500"
+          >
+            『
+            {{ settingsStore.siteEndText || UI_TEXTS.settings.endText.default }}
+            』
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+    <UploadDialog
+      v-model="editDialogOpen"
+      :isEdit="true"
+      :initialItem="editItem"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -142,6 +148,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 type CSSProperties = Partial<CSSStyleDeclaration>;
 import MediaPreview from "./MediaPreview.vue";
+import UploadDialog from "./UploadDialog.vue";
 import { useSettingsStore } from "../stores/settings";
 import { UI_TEXTS } from "../config/texts";
 
@@ -165,6 +172,49 @@ const axisEndPaddingRatio = ref<number>(0.1);
 const axisPaddingPx = ref<number>(16);
 
 const settingsStore = useSettingsStore();
+
+// 主人模式：使用 Pinia 同步；保留 storage 事件用于跨标签页同步
+const isMasterMode = computed<boolean>({
+  get: () => settingsStore.isMasterMode,
+  set: (val: boolean) => settingsStore.setMasterMode(val),
+});
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === "hst_app_is_master") {
+      settingsStore.setMasterMode(!!localStorage.getItem("hst_app_is_master"));
+    }
+  });
+}
+
+// 主人模式下，三击图片触发编辑
+const editDialogOpen = ref(false);
+const editItem = ref<any | null>(null);
+const lastClickedItemId = ref<string | null>(null);
+const lastClickTimestamp = ref<number>(0);
+const clickCount = ref<number>(0);
+const CLICK_INTERVAL_MS = 600;
+
+function onItemImageClick(item: any) {
+  if (!isMasterMode.value) return;
+  const now = Date.now();
+  if (
+    lastClickedItemId.value === item.id &&
+    now - lastClickTimestamp.value <= CLICK_INTERVAL_MS
+  ) {
+    clickCount.value += 1;
+  } else {
+    lastClickedItemId.value = item.id;
+    clickCount.value = 1;
+  }
+  lastClickTimestamp.value = now;
+
+  if (clickCount.value >= 3) {
+    editItem.value = item;
+    editDialogOpen.value = true;
+    clickCount.value = 0;
+  }
+}
 
 const timeAxisPositionStyle = computed(() => {
   if (activeIndex.value === -1 || !props.items || props.items.length === 0) {

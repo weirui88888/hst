@@ -14,7 +14,11 @@
         <h3
           class="text-lg font-semibold text-neutral-800 dark:text-neutral-200"
         >
-          {{ UI_TEXTS.upload.title }}
+          {{
+            isEdit
+              ? UI_TEXTS.upload.editTitle || UI_TEXTS.upload.title
+              : UI_TEXTS.upload.title
+          }}
         </h3>
         <button
           @click="$emit('update:modelValue', false)"
@@ -291,7 +295,11 @@
           ]"
           :style="isFormValid ? { backgroundColor: SITE_MAIN_COLOR } : {}"
         >
-          {{ UI_TEXTS.upload.saveButton }}
+          {{
+            props.isEdit
+              ? UI_TEXTS.upload.updateButton || "调整"
+              : UI_TEXTS.upload.saveButton
+          }}
         </button>
       </div>
     </div>
@@ -394,6 +402,8 @@ import EmojiPicker from "./EmojiPicker.vue";
 // Props定义
 interface Props {
   modelValue: boolean;
+  isEdit?: boolean;
+  initialItem?: any | null;
 }
 
 const props = defineProps<Props>();
@@ -512,17 +522,36 @@ watch(
   () => props.modelValue,
   (v: boolean) => {
     if (v) {
-      title.value = "我的标题";
-      content.value = `风吹过山谷，带来清晨的凉意，
+      if (props.isEdit && props.initialItem) {
+        // 编辑模式：用初始数据回填
+        const item = props.initialItem as any;
+        title.value = item.title || "";
+        content.value = item.content || "";
+        tags.value = Array.isArray(item.tags)
+          ? item.tags.join(" ")
+          : item.tags || "";
+        date.value = item.date ? new Date(item.date) : new Date();
+        media.value = Array.isArray(item.media)
+          ? item.media.map((m: any) => ({
+              type: m.type,
+              url: m.url,
+              aspectRatio: m.aspectRatio,
+            }))
+          : [];
+      } else {
+        // 新增模式：初始化默认值
+        title.value = "我的标题";
+        content.value = `风吹过山谷，带来清晨的凉意，
 一束光落在静谧的湖面，
 像时间遗落的羽毛，轻轻颤动。
 我们在世间奔走，
 却常忘记抬头望一眼天边，
 那缓慢移动的云，
 早已替我们写下温柔的答复。`;
-      tags.value = "旅游, 动物";
-      date.value = new Date();
-      media.value = [];
+        tags.value = "可爱多 海参 曲奇";
+        date.value = new Date();
+        media.value = [];
+      }
     }
   },
   { immediate: true },
@@ -728,25 +757,39 @@ function onSubmit() {
     return;
   }
 
-  // 所有验证通过，保存数据
-  const newItem = {
-    id: Date.now().toString(),
+  const payload = {
     title: title.value.trim(),
     content: content.value.trim(),
     tags: tagList,
     date: date.value instanceof Date ? date.value : new Date(date.value),
     media: media.value,
-  };
+  } as any;
 
-  store.addItem(newItem);
-
-  // 显示成功提示
-  (window as any).$toast?.success(UI_TEXTS.toast.uploadSuccess);
+  if (props.isEdit && props.initialItem && props.initialItem.id) {
+    // 编辑模式：调用更新，仅用调整文案
+    store
+      .updateItem(props.initialItem.id, payload as any)
+      .then(() => {
+        (window as any).$toast?.success(
+          UI_TEXTS.toast.updateSuccess || "调整完成",
+        );
+      })
+      .catch((err) => {
+        console.error("更新时间轴项目失败", err);
+        (window as any).$toast?.error(
+          UI_TEXTS.toast.updateFailed || "调整失败，请重试",
+        );
+      });
+  } else {
+    // 新增模式：仅用录入成功文案
+    store.addItem(payload as any);
+    (window as any).$toast?.success(UI_TEXTS.toast.uploadSuccess);
+  }
 
   // 关闭录入弹窗
   emit("update:modelValue", false);
 
-  // 重置表单
+  // 重置表单（编辑完也重置，避免下次遗留）
   resetForm();
 }
 

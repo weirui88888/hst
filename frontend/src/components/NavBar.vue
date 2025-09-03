@@ -145,8 +145,11 @@ import { computed, ref } from "vue";
 import { useThemeStore } from "../stores/theme";
 import { useEffectsStore } from "../stores/effects";
 import { useSettingsStore } from "../stores/settings";
+// @ts-ignore
 import UploadDialog from "./UploadDialog.vue";
+// @ts-ignore
 import SettingsPanel from "./SettingsPanel.vue";
+// @ts-ignore
 import AutoPlayButton from "./AutoPlayButton.vue";
 import { UI_TEXTS } from "../config/texts";
 import { useToast } from "../utils/toast";
@@ -223,17 +226,11 @@ const handleSettingsPanelChange = (newValue: boolean) => {
   }
 };
 
-// ===== 长按标题切换隐藏按钮 =====
-const SHOW_EXTRA_KEY = "hst_show_extra_buttons";
-const getShowExtraButtons = () => {
-  try {
-    const saved = localStorage.getItem(SHOW_EXTRA_KEY);
-    return saved === "1";
-  } catch {
-    return false;
-  }
-};
-const showExtraButtons = ref<boolean>(getShowExtraButtons());
+// ===== 长按标题切换隐藏按钮（使用 Pinia 同步主人模式） =====
+const showExtraButtons = computed<boolean>({
+  get: () => settings.isMasterMode,
+  set: (val: boolean) => settings.setMasterMode(val),
+});
 
 let longPressTimer: number | null = null;
 const LONG_PRESS_MS = 5000; // 5秒
@@ -248,19 +245,13 @@ function clearLongPressTimer() {
 function onTitlePressStart() {
   clearLongPressTimer();
   longPressTimer = window.setTimeout(() => {
-    // 长按8秒后切换显示/隐藏，并持久化到本地
-    if (showExtraButtons.value) {
-      showExtraButtons.value = false;
-      try {
-        localStorage.removeItem(SHOW_EXTRA_KEY);
-      } catch {}
-      toast.info("已隐藏更多按钮");
+    // 长按后切换显示/隐藏，并通过 Pinia + localStorage 同步
+    if (settings.isMasterMode) {
+      settings.setMasterMode(false);
+      toast.info(UI_TEXTS.toast.extraButtonsHidden);
     } else {
-      showExtraButtons.value = true;
-      try {
-        localStorage.setItem(SHOW_EXTRA_KEY, "1");
-      } catch {}
-      toast.success("已解锁更多按钮");
+      settings.setMasterMode(true);
+      toast.success(UI_TEXTS.toast.extraButtonsUnlocked);
     }
   }, LONG_PRESS_MS);
 }
