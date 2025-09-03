@@ -390,7 +390,7 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, watch, onUnmounted, computed, nextTick } from "vue";
+import { ref, watch, onMounted, onUnmounted, computed, nextTick } from "vue";
 import { useTextareaAutosize } from "@vueuse/core";
 import { useTimelineStore } from "../stores/timeline";
 import type { MediaItem } from "../stores/timeline";
@@ -434,6 +434,13 @@ if (typeof window !== "undefined") {
   document.addEventListener("mousedown", onGlobalMouseDown, {
     passive: true,
   } as any);
+}
+
+// ESC键关闭弹窗
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === "Escape" && props.modelValue) {
+    emit("update:modelValue", false);
+  }
 }
 
 const beginTagsEdit = () => {
@@ -580,6 +587,13 @@ watch(
   { immediate: true },
 );
 
+onMounted(() => {
+  if (typeof window !== "undefined") {
+    // 添加ESC键监听
+    document.addEventListener("keydown", handleKeydown);
+  }
+});
+
 onUnmounted(() => {
   if (typeof document !== "undefined") {
     // 恢复正确的滚动设置
@@ -590,6 +604,8 @@ onUnmounted(() => {
   }
   if (typeof window !== "undefined") {
     document.removeEventListener("mousedown", onGlobalMouseDown as any);
+    // 移除ESC键监听
+    document.removeEventListener("keydown", handleKeydown);
   }
 });
 
