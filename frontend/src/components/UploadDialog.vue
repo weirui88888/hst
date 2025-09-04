@@ -6,6 +6,7 @@
     @touchmove.prevent
   >
     <div
+      data-dialog
       class="upload-dialog w-[92vw] max-w-xl md:max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg bg-neutral-100 dark:bg-neutral-900 p-4 shadow-lg border border-neutral-300 dark:border-neutral-700"
       @wheel.stop
       @touchmove.stop
@@ -312,6 +313,7 @@
       @touchmove.prevent
     >
       <div
+        data-dialog
         class="relative w-[90vw] max-w-[560px] overflow-x-hidden overscroll-contain"
         @click.stop
       >
@@ -498,20 +500,33 @@ const handleInputFocus = () => {
     savedScrollPosition.value =
       window.pageYOffset || document.documentElement.scrollTop;
 
-    // 防止页面滚动
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${savedScrollPosition.value}px`;
-    document.body.style.width = "100%";
+    // 使用更温和的方法防止页面滚动，不影响输入框光标
+    // 添加touchmove事件监听器来阻止滚动
+    const preventScroll = (e: TouchEvent) => {
+      // 只阻止在弹窗外的滚动
+      const target = e.target as Element;
+      const dialog = document.querySelector("[data-dialog]");
+      if (dialog && !dialog.contains(target)) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchmove", preventScroll, { passive: false });
+
+    // 存储事件监听器引用以便后续移除
+    (document as any)._preventScrollHandler = preventScroll;
   }
 };
 
 // 处理输入框失焦时的滚动恢复
 const handleInputBlur = () => {
   if (isMobile.value && typeof window !== "undefined") {
-    // 恢复页面滚动
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.width = "";
+    // 移除滚动阻止事件监听器
+    const preventScroll = (document as any)._preventScrollHandler;
+    if (preventScroll) {
+      document.removeEventListener("touchmove", preventScroll);
+      delete (document as any)._preventScrollHandler;
+    }
 
     // 恢复滚动位置
     window.scrollTo(0, savedScrollPosition.value);
@@ -663,10 +678,12 @@ onUnmounted(() => {
     document.body.style.overflowX = "hidden";
     document.body.style.overflowY = "hidden";
 
-    // 恢复body的position样式（防止输入框聚焦时设置的fixed样式残留）
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.width = "";
+    // 清理可能残留的事件监听器
+    const preventScroll = (document as any)._preventScrollHandler;
+    if (preventScroll) {
+      document.removeEventListener("touchmove", preventScroll);
+      delete (document as any)._preventScrollHandler;
+    }
 
     // 恢复滚动位置
     if (isMobile.value && typeof window !== "undefined") {
