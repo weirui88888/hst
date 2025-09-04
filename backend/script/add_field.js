@@ -126,31 +126,102 @@ const showHelp = () => {
   -l, --list-fields          列出指定集合的所有字段
   -h, --help                 显示帮助信息
 
-示例:
-  # 给timeline集合添加新字段isArchived，值为false
-  node add_field.js -c timeline -f isArchived -v false -t boolean
+📚 基于实际数据库的示例:
 
-  # 给userConfig集合添加新字段theme，值为"dark"
-  node add_field.js -c userConfig -f theme -v "dark" -t string -d "light"
+🎯 Timeline集合 (时间轴故事条目) - 基于你的真实数据:
+  # 给所有故事添加阅读次数统计
+  node add_field.js -c timeline -f viewCount -v 0 -t number
 
-  # 只给特定条件的记录添加字段
-  node add_field.js -c timeline -f priority -v "high" -w '{"tags": "重要"}' -t string
+  # 给特定标签的故事添加优先级 (基于你的标签: "可爱多", "海参", "曲奇")
+  node add_field.js -c timeline -f priority -v "high" -w '{"tags": "可爱多"}' -t string
 
-  # 添加数组类型字段
-  node add_field.js -c timeline -f tags -v '["重要", "紧急"]' -t array
+  # 给特定日期的故事添加特殊标记 (基于你的日期范围)
+  node add_field.js -c timeline -f specialEvent -v true -w '{"date": {"$gte": "2025-01-01"}}' -t boolean
 
-  # 添加对象类型字段
-  node add_field.js -c userConfig -f preferences -v '{"notifications": true}' -t object
+  # 给故事添加地理位置信息
+  node add_field.js -c timeline -f location -v '{"city": "北京", "coordinates": [116.4074, 39.9042]}' -t object
 
+  # 给故事添加相关链接
+  node add_field.js -c timeline -f relatedLinks -v '["https://example.com"]' -t array
+
+  # 给有媒体内容的故事添加媒体统计
+  node add_field.js -c timeline -f mediaCount -v 0 -w '{"media": {"$exists": true, "$ne": []}}' -t number
+
+  # 给故事添加心情标签
+  node add_field.js -c timeline -f mood -v "happy" -t string
+
+🎨 UserConfig集合 (用户配置) - 基于你的真实配置:
+  # 添加主题颜色配置
+  node add_field.js -c userConfig -f themeColor -v "#ff6b6b" -t string -d "#ff6b6b"
+
+  # 添加字体大小设置
+  node add_field.js -c userConfig -f fontSize -v "medium" -t string -d "medium"
+
+  # 添加自动播放设置
+  node add_field.js -c userConfig -f autoPlay -v true -t boolean -d true
+
+  # 添加通知设置
+  node add_field.js -c userConfig -f notifications -v '{"email": true, "push": false}' -t object
+
+  # 添加用户偏好语言
+  node add_field.js -c userConfig -f language -v "zh-CN" -t string -d "zh-CN"
+
+  # 添加自定义CSS样式
+  node add_field.js -c userConfig -f customCSS -v ".custom { color: red; }" -t string
+
+  # 添加背景图片设置
+  node add_field.js -c userConfig -f backgroundImage -v "default-bg.jpg" -t string
+
+🔍 实用操作:
   # 列出timeline集合的所有字段
   node add_field.js -c timeline -l
+
+  # 列出userConfig集合的所有字段
+  node add_field.js -c userConfig -l
+
+  # 给置顶的故事添加特殊样式
+  node add_field.js -c timeline -f highlightStyle -v "golden" -w '{"isPinned": true}' -t string
+
+  # 给特定标题的故事添加分类 (基于你的标题: "多多")
+  node add_field.js -c timeline -f category -v "日常" -w '{"title": "多多"}' -t string
 
 支持的集合:
   ${Object.keys(COLLECTION_MAP).join(', ')}
 
 支持的字段类型:
   string, number, boolean, array, object, date, mixed
+
+💡 业务场景说明:
+  - timeline: 管理时间轴故事条目，包含标题、内容、标签、媒体等
+  - userConfig: 管理站点配置，如标题、动画、时间轴位置等
 `);
+};
+
+// 字段业务描述映射
+const FIELD_DESCRIPTIONS = {
+  timeline: {
+    title: '故事标题，显示在时间轴上的主要标题',
+    content: '故事正文内容，支持长文本描述',
+    tags: '标签数组，用于分类和搜索故事',
+    date: '故事发生的日期，用于时间轴排序',
+    media: '媒体文件数组，包含图片和视频',
+    isPinned: '是否置顶显示，置顶的故事会优先展示',
+    isPublic: '是否公开显示，控制故事的可见性',
+    createdAt: '记录创建时间，系统自动生成',
+    updatedAt: '记录更新时间，系统自动维护'
+  },
+  userConfig: {
+    siteTitle: '网站主标题，显示在页面顶部',
+    siteEndText: '时间轴结尾文案，显示在时间轴底部',
+    epilogueMainTitle: '结语主标题，用于页面结尾部分',
+    epilogueSubTitle: '结语副标题，提供更详细的描述',
+    timeAxisPosition: '时间轴位置，left(左侧) 或 right(右侧)',
+    seasonalIndicator: '季节指示器开关，显示春夏秋冬标识',
+    animationsEnabled: '动画效果开关，控制页面动画',
+    siteMusic: '背景音乐文件名，不包含扩展名',
+    createdAt: '配置创建时间，系统自动生成',
+    updatedAt: '配置更新时间，系统自动维护'
+  }
 };
 
 // 列出集合的所有字段
@@ -173,7 +244,8 @@ const listCollectionFields = async collectionName => {
       required: field.isRequired,
       default: field.defaultValue,
       enum: field.enumValues,
-      description: field.description || ''
+      description: field.description || '',
+      businessDescription: FIELD_DESCRIPTIONS[collectionName]?.[fieldName] || ''
     };
   });
 
@@ -190,11 +262,31 @@ const listCollectionFields = async collectionName => {
     if (fieldInfo.enum && fieldInfo.enum.length > 0) {
       console.log(`  枚举值: ${fieldInfo.enum.join(', ')}`);
     }
+    if (fieldInfo.businessDescription) {
+      console.log(`  业务说明: ${fieldInfo.businessDescription}`);
+    }
     if (fieldInfo.description) {
-      console.log(`  描述: ${fieldInfo.description}`);
+      console.log(`  技术描述: ${fieldInfo.description}`);
     }
     console.log('');
   });
+
+  // 显示业务场景说明
+  if (collectionName === 'timeline') {
+    console.log(`${colors.yellow}💡 Timeline集合业务场景:${colors.reset}`);
+    console.log('  - 管理时间轴上的故事条目');
+    console.log('  - 支持多媒体内容展示');
+    console.log('  - 提供置顶和公开性控制');
+    console.log('  - 支持标签分类和搜索');
+    console.log('');
+  } else if (collectionName === 'userConfig') {
+    console.log(`${colors.yellow}💡 UserConfig集合业务场景:${colors.reset}`);
+    console.log('  - 管理网站的整体配置');
+    console.log('  - 控制页面显示效果');
+    console.log('  - 设置用户偏好选项');
+    console.log('  - 管理主题和样式');
+    console.log('');
+  }
 };
 
 // 验证集合是否存在

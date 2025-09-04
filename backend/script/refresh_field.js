@@ -123,25 +123,105 @@ const showHelp = () => {
   -l, --list-fields         列出指定集合的所有字段
   -h, --help                显示帮助信息
 
-示例:
-  # 刷新timeline集合中所有记录的isPinned字段为false
+📚 基于实际数据库的示例:
+
+🎯 Timeline集合 (时间轴故事条目) - 基于你的真实数据:
+  # 取消所有故事的置顶状态
   node refresh_field.js -c timeline -f isPinned -v false
 
-  # 刷新userConfig集合中所有记录的siteTitle字段
-  node refresh_field.js -c userConfig -f siteTitle -v "新的网站标题"
+  # 将所有故事设为公开状态
+  node refresh_field.js -c timeline -f isPublic -v true
 
-  # 只刷新特定条件的记录
-  node refresh_field.js -c timeline -f isPinned -v true -w '{"tags": "重要"}'
+  # 只给特定标签的故事设置置顶 (基于你的标签: "可爱多", "海参", "曲奇")
+  node refresh_field.js -c timeline -f isPinned -v true -w '{"tags": "可爱多"}'
 
-  # 重置字段为默认值
-  node refresh_field.js -c userConfig -f seasonalIndicator
+  # 给特定日期的故事添加特殊标记 (基于你的日期范围)
+  node refresh_field.js -c timeline -f isPinned -v true -w '{"date": {"$gte": "2025-01-01"}}'
 
+  # 重置所有故事的标签为空数组
+  node refresh_field.js -c timeline -f tags -v '[]'
+
+  # 给有媒体内容的故事更新媒体信息
+  node refresh_field.js -c timeline -f media -v '[{"type": "image", "url": "new-url.jpg", "aspectRatio": "16/9"}]' -w '{"media": {"$exists": true}}'
+
+  # 给特定标题的故事更新内容 (基于你的标题: "多多")
+  node refresh_field.js -c timeline -f content -v "新的故事内容" -w '{"title": "多多"}'
+
+🎨 UserConfig集合 (用户配置) - 基于你的真实配置:
+  # 更新网站标题 (当前: "多多与贺贺的青春")
+  node refresh_field.js -c userConfig -f siteTitle -v "多多与贺贺的青春时光"
+
+  # 更新结尾文案 (当前: "十二年的陪伴，是最长情的告白")
+  node refresh_field.js -c userConfig -f siteEndText -v "— 我们的故事还在继续 —"
+
+  # 切换时间轴位置 (当前: "left", 可选: "left" 或 "right")
+  node refresh_field.js -c userConfig -f timeAxisPosition -v "right"
+
+  # 开启季节指示器 (当前: true)
+  node refresh_field.js -c userConfig -f seasonalIndicator -v false
+
+  # 关闭动画效果 (当前: true)
+  node refresh_field.js -c userConfig -f animationsEnabled -v false
+
+  # 更换背景音乐 (当前: "you-are-the-reason")
+  node refresh_field.js -c userConfig -f siteMusic -v "bleeding-love"
+
+  # 更新结语主标题 (当前: "流转的岁月里，爱从未缺席")
+  node refresh_field.js -c userConfig -f epilogueMainTitle -v "时光荏苒，爱意永恒"
+
+  # 更新结语副标题
+  node refresh_field.js -c userConfig -f epilogueSubTitle -v "在岁月的长河中，我们的爱情如星辰般闪耀"
+
+🔍 实用操作:
   # 列出timeline集合的所有字段
   node refresh_field.js -c timeline -l
 
-支持的集合:
-  ${Object.keys(COLLECTION_MAP).join(', ')}
+  # 列出userConfig集合的所有字段
+  node refresh_field.js -c userConfig -l
+
+  # 重置字段为默认值 (不指定-v参数)
+  node refresh_field.js -c userConfig -f seasonalIndicator
+
+  # 批量更新特定条件的故事 (基于你的日期范围)
+  node refresh_field.js -c timeline -f isPublic -v false -w '{"date": {"$lt": "2025-01-01"}}'
+
+  # 给所有故事添加统一的标签
+  node refresh_field.js -c timeline -f tags -v '["回忆", "珍贵"]'
+
+  # 给特定标签的故事更新置顶状态
+  node refresh_field.js -c timeline -f isPinned -v true -w '{"tags": {"$in": ["可爱多", "海参"]}}'
+
+💡 业务场景说明:
+  - timeline: 管理时间轴故事条目，可刷新置顶状态、公开性、标签等
+  - userConfig: 管理站点配置，可刷新标题、动画、时间轴位置等设置
 `);
+};
+
+// 字段业务描述映射
+const FIELD_DESCRIPTIONS = {
+  timeline: {
+    title: '故事标题，显示在时间轴上的主要标题',
+    content: '故事正文内容，支持长文本描述',
+    tags: '标签数组，用于分类和搜索故事',
+    date: '故事发生的日期，用于时间轴排序',
+    media: '媒体文件数组，包含图片和视频',
+    isPinned: '是否置顶显示，置顶的故事会优先展示',
+    isPublic: '是否公开显示，控制故事的可见性',
+    createdAt: '记录创建时间，系统自动生成',
+    updatedAt: '记录更新时间，系统自动维护'
+  },
+  userConfig: {
+    siteTitle: '网站主标题，显示在页面顶部',
+    siteEndText: '时间轴结尾文案，显示在时间轴底部',
+    epilogueMainTitle: '结语主标题，用于页面结尾部分',
+    epilogueSubTitle: '结语副标题，提供更详细的描述',
+    timeAxisPosition: '时间轴位置，left(左侧) 或 right(右侧)',
+    seasonalIndicator: '季节指示器开关，显示春夏秋冬标识',
+    animationsEnabled: '动画效果开关，控制页面动画',
+    siteMusic: '背景音乐文件名，不包含扩展名',
+    createdAt: '配置创建时间，系统自动生成',
+    updatedAt: '配置更新时间，系统自动维护'
+  }
 };
 
 // 列出集合的所有字段
@@ -164,7 +244,8 @@ const listCollectionFields = async collectionName => {
       required: field.isRequired,
       default: field.defaultValue,
       enum: field.enumValues,
-      description: field.description || ''
+      description: field.description || '',
+      businessDescription: FIELD_DESCRIPTIONS[collectionName]?.[fieldName] || ''
     };
   });
 
@@ -181,11 +262,31 @@ const listCollectionFields = async collectionName => {
     if (fieldInfo.enum && fieldInfo.enum.length > 0) {
       console.log(`  枚举值: ${fieldInfo.enum.join(', ')}`);
     }
+    if (fieldInfo.businessDescription) {
+      console.log(`  业务说明: ${fieldInfo.businessDescription}`);
+    }
     if (fieldInfo.description) {
-      console.log(`  描述: ${fieldInfo.description}`);
+      console.log(`  技术描述: ${fieldInfo.description}`);
     }
     console.log('');
   });
+
+  // 显示业务场景说明
+  if (collectionName === 'timeline') {
+    console.log(`${colors.yellow}💡 Timeline集合业务场景:${colors.reset}`);
+    console.log('  - 管理时间轴上的故事条目');
+    console.log('  - 支持多媒体内容展示');
+    console.log('  - 提供置顶和公开性控制');
+    console.log('  - 支持标签分类和搜索');
+    console.log('');
+  } else if (collectionName === 'userConfig') {
+    console.log(`${colors.yellow}💡 UserConfig集合业务场景:${colors.reset}`);
+    console.log('  - 管理网站的整体配置');
+    console.log('  - 控制页面显示效果');
+    console.log('  - 设置用户偏好选项');
+    console.log('  - 管理主题和样式');
+    console.log('');
+  }
 };
 
 // 验证字段是否存在
