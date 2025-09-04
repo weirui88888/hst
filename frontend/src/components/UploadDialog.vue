@@ -421,6 +421,10 @@ const tagsBox = ref<HTMLElement | null>(null);
 // 聚焦状态管理（用于记录最后聚焦的输入框）
 const lastFocusedInput = ref<"title" | "content" | null>(null);
 
+// 移动端滚动位置管理
+const savedScrollPosition = ref(0);
+const isMobile = ref(false);
+
 function onGlobalMouseDown(ev: MouseEvent) {
   if (!tagsEditing.value) return;
   const el = tagsBox.value;
@@ -471,10 +475,47 @@ const endTagsEdit = () => {
 // 聚焦状态处理方法
 const onTitleFocus = () => {
   lastFocusedInput.value = "title";
+  handleInputFocus();
 };
 
 const onContentFocus = () => {
   lastFocusedInput.value = "content";
+  handleInputFocus();
+};
+
+const onTitleBlur = () => {
+  handleInputBlur();
+};
+
+const onContentBlur = () => {
+  handleInputBlur();
+};
+
+// 处理输入框聚焦时的滚动问题
+const handleInputFocus = () => {
+  if (isMobile.value && typeof window !== "undefined") {
+    // 保存当前滚动位置
+    savedScrollPosition.value =
+      window.pageYOffset || document.documentElement.scrollTop;
+
+    // 防止页面滚动
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedScrollPosition.value}px`;
+    document.body.style.width = "100%";
+  }
+};
+
+// 处理输入框失焦时的滚动恢复
+const handleInputBlur = () => {
+  if (isMobile.value && typeof window !== "undefined") {
+    // 恢复页面滚动
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+
+    // 恢复滚动位置
+    window.scrollTo(0, savedScrollPosition.value);
+  }
 };
 
 const parsedTags = computed(() => {
@@ -569,6 +610,18 @@ watch(
   () => props.modelValue,
   (isOpen: boolean) => {
     if (isOpen) {
+      // 检测是否为移动端
+      isMobile.value =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        ) || window.innerWidth <= 768;
+
+      // 保存当前滚动位置
+      if (typeof window !== "undefined") {
+        savedScrollPosition.value =
+          window.pageYOffset || document.documentElement.scrollTop;
+      }
+
       // 禁止页面滚动
       if (typeof document !== "undefined") {
         document.body.style.overflow = "hidden";
@@ -581,6 +634,14 @@ watch(
         document.documentElement.style.overflowY = "auto";
         document.body.style.overflowX = "hidden";
         document.body.style.overflowY = "hidden";
+
+        // 恢复滚动位置
+        if (isMobile.value && typeof window !== "undefined") {
+          // 使用 setTimeout 确保 DOM 更新完成后再恢复滚动位置
+          setTimeout(() => {
+            window.scrollTo(0, savedScrollPosition.value);
+          }, 0);
+        }
       }
     }
   },
@@ -601,6 +662,16 @@ onUnmounted(() => {
     document.documentElement.style.overflowY = "auto";
     document.body.style.overflowX = "hidden";
     document.body.style.overflowY = "hidden";
+
+    // 恢复body的position样式（防止输入框聚焦时设置的fixed样式残留）
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+
+    // 恢复滚动位置
+    if (isMobile.value && typeof window !== "undefined") {
+      window.scrollTo(0, savedScrollPosition.value);
+    }
   }
   if (typeof window !== "undefined") {
     document.removeEventListener("mousedown", onGlobalMouseDown as any);
