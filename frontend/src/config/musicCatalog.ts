@@ -13,6 +13,7 @@ export interface SiteMusicOption {
 export const SITE_MUSIC_OPTIONS: SiteMusicOption[] = [
   { id: "you-are-the-reason", name: "You are the reason" },
   { id: "bleeding-love", name: "Bleeding love" },
+  { id: "be-ok", name: "Be ok" },
 ];
 
 export function getMusicSrcById(id: string): string {
