@@ -4,7 +4,10 @@
     <main class="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
       <ErrorMessage v-if="hasError" @retry="retryLoading" />
       <template v-else>
-        <CoverHero :latest="latestItem" />
+        <CoverHero
+          :latest="latestItem"
+          :loading="timelineStore.loading || settings.loading"
+        />
         <Timeline
           :items="items"
           :seasonalIndicator="settings.seasonalIndicator"

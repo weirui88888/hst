@@ -1,6 +1,22 @@
 <template>
   <section class="py-10 md:py-14">
-    <div v-if="latest" class="grid md:grid-cols-2 gap-6">
+    <!-- 骨架屏：加载中优先渲染，避免空态闪烁 -->
+    <div v-if="loading" class="grid md:grid-cols-2 gap-6 select-none">
+      <div class="rounded-xl overflow-hidden skeleton-box h-48 md:h-64"></div>
+      <div class="space-y-3">
+        <div class="h-6 w-3/4 rounded skeleton-box"></div>
+        <div class="h-4 w-full rounded skeleton-box"></div>
+        <div class="h-4 w-5/6 rounded skeleton-box"></div>
+        <div class="flex gap-2 mt-4 items-center">
+          <div class="h-6 w-14 rounded-md skeleton-box"></div>
+          <div class="h-6 w-14 rounded-md skeleton-box"></div>
+          <div class="h-6 w-14 rounded-md skeleton-box"></div>
+          <div class="ml-auto h-4 w-24 rounded skeleton-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="latest" class="grid md:grid-cols-2 gap-6">
       <div
         class="rounded-xl overflow-hidden bg-neutral-200/60 dark:bg-neutral-800/60"
       >
@@ -44,21 +60,11 @@ import type { TimelineItem } from "../stores/timeline";
 import MediaPreview from "./MediaPreview.vue";
 import { UI_TEXTS } from "../config/texts";
 
-const { latest: latestProp } = defineProps<{ latest?: TimelineItem | null }>();
+const { latest: latestProp, loading = false } = defineProps<{
+  latest?: TimelineItem | null;
+  loading?: boolean;
+}>();
 const latest = computed(() => latestProp ?? null);
-
-// 根据真实宽高比计算封面容器的 aspect-ratio（无则回退 16/9）
-const coverAspectStyle = computed(() => {
-  const media = latest.value?.media?.[0] as any;
-  const ratio = media?.aspectRatio as string | undefined;
-  if (ratio && /^(\d+\/?\d+)$/.test(ratio)) {
-    // 支持 "w/h" 或单个数字（不太常见）
-    if (ratio.includes("/")) {
-      return { aspectRatio: ratio } as Record<string, string>;
-    }
-  }
-  return { aspectRatio: "16 / 9" } as Record<string, string>;
-});
 
 // 格式化日期，只显示年月日
 const formatDate = (dateValue: Date | string) => {
@@ -88,4 +94,48 @@ const formatDate = (dateValue: Date | string) => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Skeleton base with better dark contrast and shimmer */
+.skeleton-box {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(229, 231, 235, 0.9); /* neutral-200 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-box {
+    background-color: rgba(63, 63, 70, 0.9); /* zinc-700 */
+  }
+}
+
+.skeleton-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  animation: skeleton-shimmer 1.2s infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-box::after {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.12),
+      transparent
+    );
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+</style>
