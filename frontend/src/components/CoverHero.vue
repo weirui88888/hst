@@ -99,13 +99,11 @@ const formatDate = (dateValue: Date | string) => {
 .skeleton-box {
   position: relative;
   overflow: hidden;
-  background-color: rgba(229, 231, 235, 0.9); /* neutral-200 */
+  background-color: rgba(229, 231, 235, 0.9); /* neutral-200 - 浅色模式 */
 }
 
-@media (prefers-color-scheme: dark) {
-  .skeleton-box {
-    background-color: rgba(63, 63, 70, 0.9); /* zinc-700 */
-  }
+.dark .skeleton-box {
+  background-color: rgba(75, 85, 99, 0.3); /* 暗黑模式下的灰色，增加对比度 */
 }
 
 .skeleton-box::after {
@@ -119,18 +117,16 @@ const formatDate = (dateValue: Date | string) => {
     rgba(255, 255, 255, 0.35),
     transparent
   );
-  animation: skeleton-shimmer 1.2s infinite;
+  animation: skeleton-shimmer 2.5s infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  .skeleton-box::after {
-    background-image: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.12),
-      transparent
-    );
-  }
+.dark .skeleton-box::after {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
 }
 
 @keyframes skeleton-shimmer {
