@@ -4,12 +4,14 @@
     class="fixed inset-0 z-[1100] grid place-items-center bg-black/60 overscroll-none"
     @wheel.prevent
     @touchmove.prevent
+    @click="handleBackdropClick"
   >
     <div
       data-dialog
       class="upload-dialog w-[92vw] max-w-xl md:max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg bg-neutral-100 dark:bg-neutral-900 p-4 shadow-lg border border-neutral-300 dark:border-neutral-700"
       @wheel.stop
       @touchmove.stop
+      @click.stop
     >
       <div class="flex items-center justify-between mb-3">
         <h3
@@ -23,25 +25,17 @@
         </h3>
         <button
           @click="$emit('update:modelValue', false)"
-          class="text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 transition-all duration-200 bg-none border-none"
+          class="px-2 py-1 text-sm font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors border-none bg-transparent"
           style="background: none; border: none"
         >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18 18 6M6 6l12 12"
-            />
-          </svg>
+          {{ UI_TEXTS.upload.cancel }}
         </button>
       </div>
-      <form class="space-y-3" @submit.prevent="onSubmit">
+      <form
+        class="space-y-3"
+        @submit.prevent="onSubmit"
+        @keydown.enter.prevent="onSubmit()"
+      >
         <div
           class="grid grid-cols-1 md:[grid-template-columns:4.5fr_7.5fr] gap-6 md:gap-6 items-start"
         >
@@ -106,7 +100,7 @@
                   <div
                     class="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"
                   ></div>
-                  <span class="text-sm">上传中...</span>
+                  <span class="text-sm">{{ UI_TEXTS.upload.uploading }}</span>
                 </div>
               </div>
 
@@ -189,7 +183,7 @@
                   <div
                     class="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"
                   ></div>
-                  <span class="text-sm">上传中...</span>
+                  <span class="text-sm">{{ UI_TEXTS.upload.uploading }}</span>
                 </div>
               </div>
 
@@ -243,6 +237,28 @@
                   @blur="onContentBlur"
                   class="w-full px-0 py-0 border-0 bg-transparent text-base leading-relaxed text-neutral-600 dark:text-neutral-300 outline-none resize-none"
                 />
+                <!-- 清除内容按钮 -->
+                <button
+                  v-if="content.trim()"
+                  @click="clearContent"
+                  class="absolute bottom-2 right-2 w-6 h-6 bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-full flex items-center justify-center hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors border-none"
+                  type="button"
+                  title="清除内容"
+                >
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
             <!-- 标签输入/展示 与 日期选择 同行两端布局（与故事章节展示一致） -->
@@ -312,7 +328,7 @@
       <!-- 底部操作区：独占一行，靠右，底部间距与顶部一致（由容器 p-4 提供） -->
       <div class="flex items-center justify-end mt-3">
         <button
-          type="button"
+          type="submit"
           :disabled="!isFormValid"
           @click="onSubmit()"
           :class="[
@@ -522,6 +538,23 @@ const onTitleBlur = () => {
 
 const onContentBlur = () => {
   handleInputBlur();
+};
+
+// 清除内容
+const clearContent = () => {
+  content.value = "";
+  // 聚焦到内容输入框
+  nextTick(() => {
+    textarea.value?.focus();
+  });
+};
+
+// 处理遮罩点击关闭
+const handleBackdropClick = (event: MouseEvent) => {
+  // 只有当点击的是遮罩本身（而不是弹窗内容）时才关闭
+  if (event.target === event.currentTarget) {
+    emit("update:modelValue", false);
+  }
 };
 
 // 处理输入框聚焦时的滚动问题
@@ -917,30 +950,11 @@ const isFormValid = computed(() => {
 });
 
 async function onSubmit() {
-  // 验证必填字段
-  if (!title.value.trim()) {
-    (window as any).$toast?.error("请填写标题");
-    return;
-  }
-  if (!content.value.trim()) {
-    (window as any).$toast?.error("请填写内容");
-    return;
-  }
-  if (!date.value) {
-    (window as any).$toast?.error("请选择日期");
-    return;
-  }
-  if (media.value.length === 0) {
-    (window as any).$toast?.error("请上传图片");
-    return;
-  }
+  // 基于总体验证的守卫，防止回车等方式绕过禁用按钮
+  if (!isFormValid.value) return;
 
-  // 验证标签格式
+  // 解析标签（可为空）
   const tagList = parsedTags.value;
-  if (tagList.length === 0) {
-    (window as any).$toast?.error("请添加标签");
-    return;
-  }
 
   // 检查是否还有未上传完成的图片（blob URL）
   const hasUnuploadedImages = media.value.some((item) =>

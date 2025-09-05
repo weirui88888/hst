@@ -8,7 +8,7 @@
       :title="UI_TEXTS.emojiPicker.triggerTitle"
     >
       <svg
-        class="w-5 h-5"
+        class="w-6 h-6"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -238,7 +238,7 @@ onUnmounted(() => {
 }
 
 .emoji-trigger-btn {
-  @apply w-8 h-8 flex items-center justify-center rounded-md transition-all duration-200 border-none;
+  @apply w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 border-none;
   @apply text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200;
   @apply hover:bg-neutral-100 dark:hover:bg-neutral-800;
   background: none;

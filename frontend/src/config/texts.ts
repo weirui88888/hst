@@ -101,6 +101,8 @@ export const UI_TEXTS = {
   upload: {
     title: "录入",
     editTitle: "调整",
+    cancel: "关闭",
+    uploading: "载入相册中...",
     desktopUploadHint: "点击或拖拽图片到此处上传",
     mobileUploadHint: "点击选择图片到此处上传",
     deleteImage: "删除已上传图片",
