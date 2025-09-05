@@ -31,6 +31,34 @@ ensureScrollable();
 // 监听页面可见性变化，确保滚动状态正确
 document.addEventListener("visibilitychange", ensureScrollable);
 
+// 禁用浏览器的历史滚动恢复，并强制回到页面顶部（解决刷新后不在最顶端的问题）
+if (typeof window !== "undefined") {
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+}
+
+const forceScrollToTop = () => {
+  if (typeof window === "undefined") return;
+  // 先设置 scrollTop，确保在部分移动端浏览器生效
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  // 再调用 window.scrollTo 兜底
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+};
+
+// 在 window load 之后再进行一次，确保骨架屏渲染也不会影响最终位置
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "load",
+    () => {
+      // 双 rAF 确保在首屏渲染与布局稳定后再置顶
+      requestAnimationFrame(() => requestAnimationFrame(forceScrollToTop));
+    },
+    { passive: true },
+  );
+}
+
 // 初始化移动端调试工具
 initVConsole();
 
@@ -52,6 +80,9 @@ if (savedTheme === "dark" || !savedTheme) {
 }
 
 app.mount("#app");
+
+// 应用挂载后再置顶一次，避免因首屏组件高度变化导致的偏移
+forceScrollToTop();
 
 // 设置站点主色 CSS 变量（可扩展为从设置中读取）
 applySiteThemeCSSVariables();

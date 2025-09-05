@@ -238,7 +238,7 @@
                   class="w-full px-0 py-0 border-0 bg-transparent text-base leading-relaxed text-neutral-600 dark:text-neutral-300 outline-none resize-none"
                 />
                 <!-- 清除内容按钮 -->
-                <button
+                <div
                   v-if="content.trim()"
                   @click="clearContent"
                   class="absolute bottom-2 right-2 w-6 h-6 bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-full flex items-center justify-center hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors border-none"
@@ -258,7 +258,7 @@
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                </button>
+                </div>
               </div>
             </div>
             <!-- 标签输入/展示 与 日期选择 同行两端布局（与故事章节展示一致） -->
