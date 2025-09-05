@@ -97,6 +97,19 @@
                 }}</span>
               </div>
 
+              <!-- 上传状态覆盖层 -->
+              <div
+                v-if="isUploading"
+                class="absolute inset-0 bg-black/50 flex items-center justify-center z-30"
+              >
+                <div class="text-white text-center">
+                  <div
+                    class="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"
+                  ></div>
+                  <span class="text-sm">上传中...</span>
+                </div>
+              </div>
+
               <!-- 删除按钮（有图时显示） -->
               <button
                 v-if="media.length > 0"
@@ -166,6 +179,20 @@
                   UI_TEXTS.upload.mobileUploadHint
                 }}</span>
               </div>
+
+              <!-- 上传状态覆盖层 -->
+              <div
+                v-if="isUploading"
+                class="absolute inset-0 bg-black/50 flex items-center justify-center z-30"
+              >
+                <div class="text-white text-center">
+                  <div
+                    class="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto mb-2"
+                  ></div>
+                  <span class="text-sm">上传中...</span>
+                </div>
+              </div>
+
               <button
                 v-if="media.length > 0"
                 type="button"
@@ -290,11 +317,15 @@
           @click="onSubmit()"
           :class="[
             'px-3 py-1.5 rounded-md font-medium transition-all duration-200 border-none shadow-sm',
-            isFormValid
+            isFormValid && !isUploading
               ? 'text-white hover:shadow-md cursor-pointer'
               : 'bg-neutral-300 dark:bg-neutral-600 text-neutral-500 dark:text-neutral-400 cursor-not-allowed',
           ]"
-          :style="isFormValid ? { backgroundColor: SITE_MAIN_COLOR } : {}"
+          :style="
+            isFormValid && !isUploading
+              ? { backgroundColor: SITE_MAIN_COLOR }
+              : {}
+          "
         >
           {{
             props.isEdit
@@ -555,6 +586,8 @@ const date = ref<Date | string>("");
 const media = ref<MediaItem[]>([]);
 // 用于左侧预览区域的本地 blob 地址，独立于 media.url（后者用于保存真实 OSS URL）
 const previewLocalUrl = ref<string>("");
+// 上传状态管理
+const isUploading = ref<boolean>(false);
 
 // 格式化日期为 YYYY-MM-DD，兼容字符串与 Date
 const formatDateForDisplay = (dateValue: any) => {
@@ -737,6 +770,7 @@ function onFiles(e: Event) {
 
     // 上传到阿里云 OSS（调用真实实例方法）
     (async () => {
+      isUploading.value = true;
       try {
         const { ossUploader } = await import("../utils/ossClient");
         const uploadRes: any = await ossUploader.upload({
@@ -761,6 +795,8 @@ function onFiles(e: Event) {
       } catch (err: any) {
         console.error("[UploadDialog] OSS 上传失败:", err?.message || err);
         (window as any).$toast?.error("图片上传失败，请重试");
+      } finally {
+        isUploading.value = false;
       }
     })();
   }
@@ -816,6 +852,49 @@ function removeMedia(index: number) {
 const store = useTimelineStore();
 
 // 重置表单到初始状态
+// 上传媒体文件到OSS
+async function uploadMediaToOSS(): Promise<MediaItem[]> {
+  const uploadedMedia: MediaItem[] = [];
+
+  for (const mediaItem of media.value) {
+    if (mediaItem.url.startsWith("blob:")) {
+      // 需要上传的图片
+      try {
+        // 从blob URL获取文件
+        const response = await fetch(mediaItem.url);
+        const blob = await response.blob();
+        const file = new File([blob], "image.jpg", { type: blob.type });
+
+        // 上传到OSS
+        const { ossUploader } = await import("../utils/ossClient");
+        const uploadRes: any = await ossUploader.upload({
+          file,
+          randomName: true,
+        });
+
+        const ossUrl = uploadRes?.ossSourceUrl || "";
+        if (ossUrl) {
+          uploadedMedia.push({
+            type: mediaItem.type,
+            url: ossUrl,
+            aspectRatio: mediaItem.aspectRatio,
+          });
+        } else {
+          throw new Error("上传失败，未获取到OSS URL");
+        }
+      } catch (error) {
+        console.error("上传图片失败:", error);
+        throw new Error("图片上传失败，请重试");
+      }
+    } else {
+      // 已经是OSS URL，直接使用
+      uploadedMedia.push(mediaItem);
+    }
+  }
+
+  return uploadedMedia;
+}
+
 function resetForm() {
   title.value = "";
   content.value = "";
@@ -823,6 +902,7 @@ function resetForm() {
   date.value = new Date();
   media.value = [];
   previewLocalUrl.value = "";
+  isUploading.value = false;
 }
 
 // 计算表单是否有效
@@ -831,11 +911,12 @@ const isFormValid = computed(() => {
     title.value.trim() &&
     content.value.trim() &&
     date.value &&
-    media.value.length > 0
+    media.value.length > 0 &&
+    !isUploading.value // 上传中时禁用提交
   );
 });
 
-function onSubmit() {
+async function onSubmit() {
   // 验证必填字段
   if (!title.value.trim()) {
     (window as any).$toast?.error("请填写标题");
@@ -861,6 +942,17 @@ function onSubmit() {
     return;
   }
 
+  // 检查是否还有未上传完成的图片（blob URL）
+  const hasUnuploadedImages = media.value.some((item) =>
+    item.url.startsWith("blob:"),
+  );
+
+  if (hasUnuploadedImages) {
+    (window as any).$toast?.error("图片还在上传中，请稍候再试");
+    return;
+  }
+
+  // 直接提交，图片已经上传完成
   const payload = {
     title: title.value.trim(),
     content: content.value.trim(),

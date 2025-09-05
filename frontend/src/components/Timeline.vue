@@ -108,7 +108,7 @@
 
                     <!-- 桌面端按钮组 - 悬停标题时显示 -->
                     <div
-                      v-if="isMasterMode && showMobileButtons"
+                      v-if="isMasterMode && showActionButtons"
                       class="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:flex pointer-events-none md:pointer-events-auto"
                     >
                       <!-- 编辑按钮 -->
@@ -272,7 +272,7 @@
 
                   <!-- 移动端按钮组 - 放在标签这一行的最下面 -->
                   <div
-                    v-if="isMasterMode && showMobileButtons"
+                    v-if="isMasterMode && showActionButtons"
                     class="w-full flex justify-start gap-2 mt-3 hidden md:hidden"
                   >
                     <!-- 编辑按钮 -->
@@ -494,7 +494,7 @@ const isMasterMode = computed<boolean>({
   set: (val: boolean) => settingsStore.setMasterMode(val),
 });
 // 仅移动端：当沉浸式预览关闭时，显示图片左下角按钮；开启时隐藏
-const showMobileButtons = computed<boolean>(() => {
+const showActionButtons = computed<boolean>(() => {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   if (!isMobile) return true; // 桌面端逻辑不变
   return !settingsStore.immersivePreviewEnabled; // 关闭沉浸式时才显示
